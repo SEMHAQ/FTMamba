@@ -1,0 +1,120 @@
+# ===============================
+# Python
+# ===============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+*.whl
+.eggs/
+
+# ===============================
+# Virtual environments
+# ===============================
+venv/
+env/
+.venv/
+.env/
+
+# ===============================
+# Datasets (large files, download via script)
+# ===============================
+*.csv
+*.parquet
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pkl
+*.data
+dataset/
+
+# ===============================
+# Model checkpoints & weights
+# ===============================
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.bin
+*.safetensors
+pretrained/
+
+# ===============================
+# Experiment results & logs
+# ===============================
+results/
+outputs/
+runs/
+wandb/
+logs/
+*.log
+tensorboard/
+events.out.tfevents.*
+
+# ===============================
+# Temporary & cache files
+# ===============================
+tmp/
+temp/
+.cache/
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# ===============================
+# IDE
+# ===============================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.spyderproject
+.spyproject
+
+# ===============================
+# OS
+# ===============================
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# ===============================
+# Jupyter
+# ===============================
+.ipynb_checkpoints/
+*.ipynb
+
+# ===============================
+# Compiled
+# ===============================
+*.so
+*.o
+*.a
+*.lib
+*.dll
+*.dylib
+*.exe
+
+# ===============================
+# LaTeX (if generating paper here)
+# ===============================
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.out
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
