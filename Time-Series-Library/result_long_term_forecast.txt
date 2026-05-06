@@ -1,0 +1,3 @@
+long_term_forecast_test_FTMamba_ETTh1_ftM_sl96_ll48_pl96_dm128_nh8_el2_dl1_df16_expand2_dc4_fc1_ebtimeF_dtTrue_test_0  
+mse:0.37902361154556274, mae:0.39763912558555603, dtw:Not calculated
+
