@@ -1,41 +1,32 @@
 """Download ETT and Weather datasets for FTMamba experiments."""
 import os
 import urllib.request
-import zipfile
+
+BASE_URL = "https://huggingface.co/datasets/thuml/Time-Series-Library/resolve/main"
 
 DATASETS = {
     "ETT-small": {
-        "urls": [
-            "https://raw.githubusercontent.com/zhouhaoyi/ETDataset/main/ETT-small/{}",
-        ],
         "files": ["ETTh1.csv", "ETTh2.csv", "ETTm1.csv", "ETTm2.csv"],
         "dir": "dataset/ETT-small",
     },
     "Weather": {
-        "urls": [
-            "https://raw.githubusercontent.com/thuml/Autoformer/main/datasets/weather/weather.csv",
-            "https://raw.githubusercontent.com/wuhaixu2016/ETDataset/main/Weather/weather.csv",
-        ],
         "files": ["weather.csv"],
         "dir": "dataset/weather",
     },
 }
 
 
-def download_file(urls, fname, dest):
+def download_file(fname, dest, subdir="ETT-small"):
     if os.path.exists(dest):
         print(f"  [skip] {dest} already exists")
         return
-    for url_template in urls:
-        url = url_template.format(fname) if '{}' in url_template else url_template
-        try:
-            print(f"  Trying {url} ...")
-            urllib.request.urlretrieve(url, dest)
-            print(f"  Done: {os.path.getsize(dest)} bytes")
-            return
-        except Exception as e:
-            print(f"  Failed: {e}")
-    print(f"  ERROR: all URLs failed for {fname}")
+    url = f"{BASE_URL}/{subdir}/{fname}"
+    try:
+        print(f"  Downloading {url} ...")
+        urllib.request.urlretrieve(url, dest)
+        print(f"  Done: {os.path.getsize(dest)} bytes")
+    except Exception as e:
+        print(f"  Failed: {e}")
 
 
 def main():
@@ -46,7 +37,7 @@ def main():
         print(f"\n=== {name} ===")
         for fname in info["files"]:
             dest = os.path.join(dest_dir, fname)
-            download_file(info["urls"], fname, dest)
+            download_file(fname, dest, subdir=name)
 
     print("\nAll datasets downloaded!")
 
