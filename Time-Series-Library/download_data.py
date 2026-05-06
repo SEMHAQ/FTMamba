@@ -12,6 +12,7 @@ DATASETS = {
     "Weather": {
         "files": ["weather.csv"],
         "dir": "dataset/weather",
+        "hf_subdir": "weather",
     },
 }
 
@@ -35,9 +36,10 @@ def main():
         dest_dir = os.path.join(base, info["dir"])
         os.makedirs(dest_dir, exist_ok=True)
         print(f"\n=== {name} ===")
+        subdir = info.get("hf_subdir", name)
         for fname in info["files"]:
             dest = os.path.join(dest_dir, fname)
-            download_file(fname, dest, subdir=name)
+            download_file(fname, dest, subdir=subdir)
 
     print("\nAll datasets downloaded!")
 
