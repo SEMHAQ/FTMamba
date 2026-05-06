@@ -13,10 +13,11 @@ export CUDA_VISIBLE_DEVICES=0
 SEQ_LEN=96
 LABEL_LEN=48
 PRED_LENS="96 192 336 720"
-E_LAYERS=2
+E_LAYERS=3
 D_LAYERS=1
-D_MODEL=128
-D_FF=16
+D_MODEL=512
+D_FF=64
+BATCH_SIZE=64
 D_CONV=4
 EXPAND=2
 DROPOUT=0.1
@@ -103,6 +104,7 @@ for dataset in "${DATASETS[@]}"; do
         --d_conv ${D_CONV} \
         --expand ${EXPAND} \
         --dropout ${DROPOUT} \
+        --batch_size ${BATCH_SIZE} \
         --des 'FTMamba_Exp' \
         --itr ${ITR} \
         ${EXTRA_ARGS}
