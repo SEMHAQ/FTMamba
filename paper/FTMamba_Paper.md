@@ -1,5 +1,14 @@
 # FTMamba: Frequency-aware Temporal Mamba for Long-term Time Series Forecasting
 
+PENG Donghai¹, YU Huanjie², JIANG Huajin²
+
+(1. School of Information Engineering, Shaoguan University, Shaoguan, Guangdong 512005, China;
+2. School of Computer Science, Hunan University of Technology and Business, Changsha, Hunan 410205, China)
+
+**Corresponding Author:** YU Huanjie, E-mail: <semhaqx@gmail.com>
+
+---
+
 ## Abstract
 
 Long-term time series forecasting is a fundamental task with broad applications in energy, weather, and transportation domains. Recent Transformer-based methods achieve strong performance but suffer from quadratic computational complexity. State Space Models (SSMs) like Mamba offer linear complexity but primarily capture temporal patterns while neglecting frequency-domain information that is critical for periodic time series. In this paper, we propose FTMamba (Frequency-aware Temporal Mamba), a novel dual-branch architecture that combines Mamba's efficient temporal modeling with learnable frequency-domain feature extraction via a gated fusion mechanism. The temporal branch employs Mamba blocks for capturing long-range dependencies with linear complexity, while the frequency branch applies FFT with learnable frequency filters to extract periodic patterns. A gated fusion module adaptively combines both branches, allowing the model to leverage complementary temporal and frequency information. Built on a patch-based architecture, FTMamba processes time series through patch embedding followed by stacked FTMamba layers with residual connections. Extensive experiments on four benchmark datasets (ETTh1, ETTh2, ETTm1, Weather) demonstrate that FTMamba achieves state-of-the-art performance, outperforming strong baselines including PatchTST, iTransformer, DLinear, TimesNet, and vanilla Transformer across most prediction horizons. Specifically, FTMamba achieves the best MSE on 3 out of 4 horizons on both ETTh1 and ETTh2 datasets, with improvements of up to 7.5% over the strongest baseline.
