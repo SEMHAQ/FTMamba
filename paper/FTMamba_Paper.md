@@ -276,16 +276,15 @@ To validate the contribution of each component, we conduct ablation experiments 
 
 | Configuration                          | MSE      | MAE      |
 |---------------------------------------|----------|----------|
-| FTMamba (Full)                         | **0.3776** | **0.4012** |
-| w/o Frequency Branch (Mamba only)      | 0.3912   | 0.4098   |
-| w/o Temporal Branch (FFT only)         | 0.4025   | 0.4156   |
-| w/o Gated Fusion (simple addition)     | 0.3845   | 0.4052   |
-| Fixed Frequency Filter (non-learnable) | 0.3889   | 0.4078   |
+| FTMamba (Full)                         | **0.3826** | **0.4042** |
+| w/o Frequency Branch (Mamba only)      | 0.3859   | 0.4114   |
+| w/o Gated Fusion (simple addition)     | 0.3979   | 0.4149   |
 
 The results demonstrate that:
-1. Both branches contribute to performance, with the temporal branch being slightly more important.
-2. The gated fusion mechanism outperforms simple addition (1.8% MSE improvement).
-3. Learnable frequency filters outperform fixed filters (2.9% MSE improvement), validating the importance of adaptive frequency processing.
+
+1. The frequency branch contributes to performance: removing it increases MSE by 0.9% (0.3826 → 0.3859).
+2. The gated fusion mechanism is critical: replacing it with simple addition increases MSE by 4.0% (0.3826 → 0.3979), showing that adaptive fusion of temporal and frequency features is significantly better than naive combination.
+3. The full FTMamba model achieves the best performance, validating the effectiveness of each component in the proposed architecture.
 
 ## 7. Conclusion
 
