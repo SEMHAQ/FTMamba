@@ -7,12 +7,14 @@ import random
 import numpy as np
 
 if __name__ == '__main__':
-    fix_seed = 2021
+    parser = argparse.ArgumentParser(description='TimesNet')
+    parser.add_argument('--fix_seed', type=int, default=2021, help='random seed')
+    # Parse fix_seed early so it applies before other code
+    _pre_args, _ = parser.parse_known_args()
+    fix_seed = _pre_args.fix_seed
     random.seed(fix_seed)
     torch.manual_seed(fix_seed)
     np.random.seed(fix_seed)
-
-    parser = argparse.ArgumentParser(description='TimesNet')
 
     # basic config
     parser.add_argument('--task_name', type=str, required=True, default='long_term_forecast',

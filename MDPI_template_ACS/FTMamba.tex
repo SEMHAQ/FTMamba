@@ -33,7 +33,7 @@ $^{2}$ \quad School of Computer Science, Hunan University of Technology and Busi
 \corres{Correspondence: semhaqx@gmail.com}
 
 % Abstract
-\abstract{Long-term time series forecasting is a fundamental task with broad applications in energy, weather, and transportation domains. Recent Transformer-based methods achieve strong performance but suffer from quadratic computational complexity. State Space Models (SSMs) like Mamba offer linear complexity but primarily capture temporal patterns while neglecting frequency-domain information that is critical for periodic time series. In this paper, we propose FTMamba (Frequency-aware Temporal Mamba), a novel dual-branch architecture that combines Mamba's efficient temporal modeling with learnable frequency-domain feature extraction via a gated fusion mechanism. The temporal branch employs Mamba blocks for capturing long-range dependencies with linear complexity, while the frequency branch applies Fast Fourier Transform (FFT) with learnable frequency filters to extract periodic patterns. A gated fusion module adaptively combines both branches, allowing the model to leverage complementary temporal and frequency information. Built on a patch-based architecture, FTMamba processes time series through patch embedding followed by stacked FTMamba layers with residual connections. Extensive experiments on three benchmark datasets (ETTh1, ETTh2, ETTm1) demonstrate that FTMamba achieves state-of-the-art performance, outperforming strong baselines including PatchTST, iTransformer, DLinear, TimesNet, and vanilla Transformer across most prediction horizons. Specifically, FTMamba achieves the best MSE on three out of four horizons on both ETTh1 and ETTh2 datasets. Ablation studies validate the contribution of each component, with the gated fusion mechanism providing a 4.0\% MSE improvement over simple addition.}
+\abstract{Long-term time series forecasting (LTSF) has broad applications in energy, weather, and transportation. Transformer-based methods perform well but scale quadratically with sequence length. Mamba-based models offer linear complexity but operate only in the temporal domain, ignoring frequency information useful for periodic data. We propose FTMamba, a dual-branch architecture that combines Mamba's temporal modeling with learnable frequency-domain filtering via a gated fusion mechanism. The temporal branch uses Mamba blocks for long-range dependencies; the frequency branch applies FFT with learnable complex-valued filters to extract periodic patterns; a learned gate adaptively merges both streams. Experiments on ETTh1, ETTh2, and ETTm1 at horizons 96--720 show that FTMamba outperforms PatchTST, iTransformer, DLinear, TimesNet, and Transformer on most dataset--horizon pairs, achieving the best MSE on three out of four horizons on both ETTh1 and ETTh2. Ablation studies show that the gated fusion mechanism provides a 4.0\% MSE improvement over simple addition, confirming the value of adaptive temporal--frequency combination.}
 
 % Keywords
 \keyword{time series forecasting; state space model; frequency analysis; Mamba; long-term forecasting}
@@ -41,16 +41,15 @@ $^{2}$ \quad School of Computer Science, Hunan University of Technology and Busi
 % Highlights (optional but recommended for MDPI journals)
 \addhighlights{yes}
 \renewcommand{\addhighlights}{%
-\noindent The goal is to increase the discoverability and readability of the article via search engines and other scholars. Highlights should not be a copy of the abstract, but a simple text allowing the reader to quickly and simplified find out what the article is about and what can be cited from it. Each of these parts should be devoted up to 2~bullet points.\vspace{3pt}\\
-\textbf{What are the main findings?}
+\noindent\textbf{What are the main findings?}
  \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
  \item FTMamba combines Mamba's temporal modeling with learnable frequency filtering for time series forecasting
  \item The gated fusion mechanism adaptively combines temporal and frequency features, achieving 4.0\% MSE improvement over simple addition
  \end{itemize}\vspace{3pt}
 \textbf{What are the implications of the main findings?}
  \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
- \item Frequency-domain modeling is crucial for long-term time series forecasting, particularly at extended prediction horizons
- \item The dual-branch architecture with adaptive fusion provides a scalable and effective solution for real-world forecasting applications
+ \item Frequency-domain modeling improves long-term time series forecasting, especially at extended prediction horizons
+ \item The dual-branch architecture with adaptive fusion offers a scalable solution for real-world forecasting
  \end{itemize}
 }
 
@@ -59,23 +58,23 @@ $^{2}$ \quad School of Computer Science, Hunan University of Technology and Busi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
-Long-term time series forecasting (LTSF) aims to predict future values based on historical observations over extended horizons, typically ranging from hundreds to thousands of time steps~\cite{ref1,ref2}. This task is fundamental to numerous real-world applications, including weather prediction~\cite{ref1}, energy consumption planning~\cite{ref2}, traffic flow estimation~\cite{ref3}, and financial market analysis~\cite{ref4}. The ability to accurately forecast long-term trends is crucial for decision-making in these domains, yet it presents significant challenges due to complex temporal dependencies, multi-scale periodic patterns, and non-stationary distributions inherent in real-world time series data.
+Long-term time series forecasting (LTSF) predicts future values from historical observations over horizons of hundreds to thousands of time steps~\cite{ref1,ref2}. Applications span weather prediction~\cite{ref1}, energy planning~\cite{ref2}, traffic estimation~\cite{ref3}, and financial analysis~\cite{ref4}. Accurate long-range forecasting underpins operational decisions in these domains, but remains difficult because real-world series exhibit complex temporal dependencies, multi-scale periodicity, and non-stationary distributions.
 
-The Transformer architecture~\cite{ref5} has become the dominant paradigm for LTSF, with models such as Autoformer~\cite{ref6}, FEDformer~\cite{ref7}, PatchTST~\cite{ref8}, and iTransformer~\cite{ref9} achieving impressive results. These methods leverage self-attention mechanisms to capture long-range dependencies and have established strong baselines on standard benchmarks. However, Transformers inherently suffer from quadratic computational complexity $O(L^2)$ with respect to sequence length $L$, which limits their scalability to very long sequences and increases memory consumption. This computational bottleneck has motivated the exploration of alternative architectures that can achieve comparable performance with lower complexity.
+The Transformer architecture~\cite{ref5} currently dominates LTSF research. Autoformer~\cite{ref6}, FEDformer~\cite{ref7}, PatchTST~\cite{ref8}, and iTransformer~\cite{ref9} all build on self-attention to capture long-range dependencies and set strong benchmark results. However, self-attention scales quadratically $O(L^2)$ with sequence length $L$, which constrains scalability and raises memory costs. This has driven interest in architectures that match Transformer performance at lower complexity.
 
-State Space Models (SSMs), particularly the Mamba architecture~\cite{ref10}, have emerged as a promising alternative that achieves linear complexity $O(L)$ while maintaining strong modeling capabilities. Mamba employs a selective scan mechanism that enables input-dependent state transitions, allowing it to efficiently process long sequences while capturing temporal dependencies. Recent works~\cite{ref11,ref12} have adapted Mamba for time series forecasting, demonstrating competitive performance with significantly reduced computational cost. However, these methods primarily operate in the temporal domain, potentially overlooking important frequency-domain characteristics such as periodicity, seasonality, and harmonic components that are inherent in many real-world time series.
+State Space Models (SSMs), and Mamba~\cite{ref10} in particular, offer linear complexity $O(L)$ through a selective scan mechanism with input-dependent state transitions. Recent work~\cite{ref11,ref12} has applied Mamba to time series forecasting with competitive accuracy and lower compute. Yet these methods work exclusively in the temporal domain, leaving frequency-domain structure---periodicity, seasonality, harmonics---untapped.
 
-Frequency-domain analysis has long been recognized as essential for time series understanding. The Fast Fourier Transform (FFT) can efficiently decompose time series into frequency components, revealing periodic patterns that may not be easily captured by temporal models alone. For example, electricity demand data often contains daily and weekly cycles, while weather data exhibits annual seasonal patterns. Recent works~\cite{ref7,ref16} have explored incorporating frequency information into deep learning models, but they typically use fixed or handcrafted frequency representations rather than learnable frequency filters that can adapt to the specific characteristics of the data.
+Frequency analysis has long been valued for time series modeling. The Fast Fourier Transform (FFT) decomposes series into frequency components, exposing periodic patterns that temporal models may miss: daily and weekly cycles in electricity demand, annual seasonality in weather. Some recent methods~\cite{ref7,ref16} incorporate frequency information, but rely on fixed or handcrafted representations rather than filters that adapt to the data.
 
-The key insight of this paper is that temporal and frequency-domain information provide complementary perspectives for time series forecasting. Temporal models excel at capturing sequential dependencies and short-term patterns, while frequency-domain analysis reveals periodic structures and long-term cycles. Effectively combining these two information streams can lead to more robust and accurate predictions, particularly for long-term horizons where periodic patterns need to be maintained.
+Our starting point is that temporal and frequency information are complementary. Temporal models capture sequential dependencies and short-range patterns; frequency analysis exposes periodic structure and long-range cycles. Combining both should yield more robust predictions, especially at extended horizons where periodic consistency matters most.
 
-In this paper, we propose FTMamba (Frequency-aware Temporal Mamba), a novel architecture that addresses these limitations by combining the strengths of temporal and frequency-domain modeling within a unified framework. Our main contributions are as follows:
+We propose FTMamba (Frequency-aware Temporal Mamba), which unifies efficient temporal modeling via Mamba with learnable frequency-domain filtering. Our contributions:
 
 \begin{enumerate}
-\item We design a novel FTMamba layer consisting of a temporal branch (Mamba block), a frequency branch (learnable FFT filtering), and a gated fusion mechanism that adaptively combines both information streams. This dual-branch architecture enables the model to capture both sequential dependencies and periodic patterns simultaneously.
-\item Unlike fixed frequency representations, our frequency branch employs learnable complex-valued filters in the frequency domain, allowing the model to automatically discover and emphasize the most informative frequency components for the forecasting task. This adaptive filtering mechanism is crucial for handling diverse time series with varying periodic characteristics.
-\item We introduce a learnable gate that dynamically balances temporal and frequency features based on input characteristics, enabling the model to leverage complementary information from both domains. This gating mechanism allows the model to adapt its reliance on temporal versus frequency information depending on the specific forecasting horizon and data characteristics.
-\item We conduct extensive experiments on three widely-used benchmark datasets (ETTh1, ETTh2, ETTm1) with prediction horizons of 96, 192, 336, and 720 steps, demonstrating consistent improvements over strong baselines. Our results show that FTMamba achieves state-of-the-art performance on most datasets and horizons, with particularly strong improvements at longer prediction horizons.
+\item A dual-branch FTMamba layer: a Mamba block for temporal modeling, an FFT-based branch with learnable complex-valued filters for frequency extraction, and a gated fusion module that adaptively combines both streams.
+\item Learnable frequency filters that are optimized end-to-end, replacing fixed Fourier features. The model automatically identifies and emphasizes the frequency components most useful for the target forecasting task.
+\item A gating mechanism that dynamically balances temporal and frequency contributions per input, rather than using a fixed combination strategy. This lets the model shift its reliance between domains depending on the horizon and data characteristics.
+\item Experiments on three benchmarks (ETTh1, ETTh2, ETTm1) at horizons 96, 192, 336, and 720. FTMamba outperforms PatchTST, iTransformer, DLinear, TimesNet, and Transformer on most dataset--horizon pairs, with the largest gains at longer horizons. On ETTh1 and ETTh2, FTMamba achieves the best MSE on three of four horizons.
 \end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,21 +82,21 @@ In this paper, we propose FTMamba (Frequency-aware Temporal Mamba), a novel arch
 
 \subsection{Transformer-based Time Series Forecasting}
 
-The Transformer architecture~\cite{ref5} has been extensively adapted for time series forecasting, establishing new benchmarks on standard datasets. Autoformer~\cite{ref6} introduces auto-correlation mechanisms to replace standard attention, achieving $O(L \log L)$ complexity while effectively capturing periodic patterns. FEDformer~\cite{ref7} employs frequency-enhanced blocks to capture global temporal patterns, demonstrating the value of frequency-domain information in Transformer architectures. PatchTST~\cite{ref8} proposes channel-independent patching to preserve local temporal information while reducing sequence length, achieving strong performance with computational efficiency. iTransformer~\cite{ref9} applies attention on the variate dimension rather than the temporal dimension, effectively capturing inter-variate relationships that are crucial for multivariate forecasting.
+Transformers have been widely adapted for time series forecasting. Autoformer~\cite{ref6} replaces standard attention with auto-correlation, reducing complexity to $O(L \log L)$ while capturing periodic structure. FEDformer~\cite{ref7} adds frequency-enhanced blocks to the Transformer, showing that frequency features improve forecasting accuracy. PatchTST~\cite{ref8} segments the input into channel-independent patches, preserving local temporal detail while shortening the sequence. iTransformer~\cite{ref9} applies attention across variates instead of time steps, targeting inter-variate dependencies in multivariate data.
 
-Beyond Transformer variants, several alternative architectures have been proposed. DLinear~\cite{ref13} demonstrates that simple linear models can outperform complex Transformers when properly designed, challenging the necessity of attention mechanisms for time series forecasting. TimesNet~\cite{ref14} transforms 1D time series into 2D tensors and applies 2D convolution to capture multi-periodic patterns, offering a unique perspective on temporal modeling. Despite their success, these methods face challenges in computational efficiency, particularly for long sequences, as the quadratic complexity of self-attention limits their scalability.
+Non-Transformer architectures have also proven competitive. DLinear~\cite{ref13} showed that a well-designed linear model can match or beat Transformers on several benchmarks, questioning whether attention is necessary for LTSF. TimesNet~\cite{ref14} reshapes 1D series into 2D tensors and applies convolution to capture multiple periodicities. Despite these advances, the quadratic cost of self-attention remains a bottleneck for long sequences.
 
 \subsection{State Space Models for Time Series}
 
-State Space Models (SSMs) have gained significant attention for sequence modeling due to their linear computational complexity. S4~\cite{ref15} introduces a structured parameterization of state matrices for efficient long-range dependency modeling, demonstrating strong performance on the Long Range Arena benchmark. Mamba~\cite{ref10} further advances SSMs with a selective scan mechanism that enables input-dependent state transitions, achieving strong performance on language and vision tasks while maintaining linear complexity.
+SSMs have attracted attention for their linear complexity. S4~\cite{ref15} introduced structured state matrix parameterization for long-range modeling. Mamba~\cite{ref10} added a selective scan with input-dependent state transitions, matching or exceeding Transformer performance on language and vision benchmarks at linear cost.
 
-For time series forecasting, several SSM-based methods have been proposed. S-Mamba~\cite{ref11} adapts Mamba for multivariate time series by applying the selective scan across the variate dimension, effectively capturing inter-variate dependencies. TimeMachine~\cite{ref12} integrates Mamba with multi-scale temporal processing, enabling the model to capture patterns at different temporal resolutions. However, these methods focus exclusively on temporal patterns and do not explicitly model frequency-domain characteristics that are essential for capturing periodic behaviors in many real-world time series.
+For time series, S-Mamba~\cite{ref11} applies the selective scan across the variate dimension to capture inter-variate dependencies. TimeMachine~\cite{ref12} combines Mamba with multi-scale temporal processing. Both methods, however, operate purely in the time domain and do not model frequency structure such as periodicity or harmonics.
 
 \subsection{Frequency-domain Methods}
 
-Frequency-domain analysis provides a complementary perspective to temporal modeling, offering insights into periodic structures that may not be easily captured by temporal models alone. The Fourier Transform decomposes signals into sinusoidal components, revealing periodic patterns and seasonal effects. FEDformer~\cite{ref7} incorporates frequency information through Fourier-enhanced attention blocks, demonstrating the value of frequency-domain features in Transformer architectures. FreTS~\cite{ref16} proposes frequency-domain MLP for time series forecasting, showing that frequency-domain operations can be more effective than temporal operations for certain types of time series. However, most existing approaches use fixed frequency representations or apply operations directly in the frequency domain without learnable filtering that can adapt to the specific characteristics of the data.
+Frequency analysis offers a view of periodic structure that temporal models may miss. The Fourier Transform decomposes signals into sinusoidal components, exposing seasonality and cycles. FEDformer~\cite{ref7} uses Fourier-enhanced attention blocks within a Transformer. FreTS~\cite{ref16} applies MLPs in the frequency domain and reports gains over temporal MLPs for certain series types. Existing approaches mostly use fixed frequency representations or apply operations directly in the frequency domain without learnable filters that adapt to the data.
 
-Our work differs from existing approaches by combining Mamba's efficient temporal modeling with learnable frequency-domain filtering within a unified gated fusion framework. Unlike previous methods that treat temporal and frequency information independently, FTMamba adaptively combines both information streams through a learnable gating mechanism, enabling the model to exploit complementary patterns from both domains based on the specific forecasting task and data characteristics.
+FTMamba differs by combining Mamba-based temporal modeling with learnable frequency filtering inside a single gated fusion framework. Where prior work treats temporal and frequency streams separately, FTMamba merges them through a learned gate, letting the model adjust the balance per input and forecasting task.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Materials and Methods}
@@ -220,7 +219,7 @@ where $\sigma$ is the sigmoid function, and $[\cdot;\cdot]$ denotes concatenatio
 
 \subsection{Instance Normalization}
 
-Following recent works~\cite{ref8,ref9}, we apply instance normalization to handle distribution shift between training and test data. This normalization is crucial for time series forecasting as it helps the model generalize across different time periods with varying statistical properties:
+Following recent works~\cite{ref8,ref9}, we apply instance normalization to handle distribution shift between training and test data. This normalization helps the model generalize across time periods with different statistical properties:
 \begin{linenomath}
 \begin{equation}
 \mathbf{x}_{\text{norm}} = \frac{\mathbf{x} - \mu}{\sigma}
@@ -261,7 +260,7 @@ Table~\ref{tab:datasets} summarizes the dataset statistics. Following standard p
 
 \begin{table}[H]
 \caption{Dataset statistics.\label{tab:datasets}}
-\begin{tabularx}{\textwidth}{CCCCCC}
+\begin{tabularx}{\textwidth}{CCCCC}
 \toprule
 \textbf{Dataset} & \textbf{Variates} & \textbf{Timesteps} & \textbf{Frequency} & \textbf{Forecasting Horizons} \\
 \midrule
@@ -288,11 +287,11 @@ We use two standard metrics for evaluation: Mean Squared Error (MSE) and Mean Ab
 
 \subsection{Main Results}
 
-Tables~\ref{tab:etth1}--\ref{tab:ettm1} present the comprehensive results on all three benchmark datasets across prediction horizons $T \in \{96, 192, 336, 720\}$. The best results are highlighted in bold.
+Tables~\ref{tab:etth1}--\ref{tab:ettm1} report results on all three datasets across prediction horizons $T \in \{96, 192, 336, 720\}$. Best results are in bold.
 
 \begin{table}[H]
 \caption{Results on ETTh1 dataset (MSE / MAE). Lower is better.\label{tab:etth1}}
-\begin{tabularx}{\textwidth}{CCCCCC}
+\begin{tabularx}{\textwidth}{CCCCC}
 \toprule
 \textbf{Model} & \textbf{96} & \textbf{192} & \textbf{336} & \textbf{720} \\
 \midrule
@@ -308,7 +307,7 @@ Transformer  & 0.8445 / 0.7210  & 0.8028 / 0.6967  & 1.0943 / 0.8518  & 1.0878 /
 
 \begin{table}[H]
 \caption{Results on ETTh2 dataset (MSE / MAE). Lower is better.\label{tab:etth2}}
-\begin{tabularx}{\textwidth}{CCCCCC}
+\begin{tabularx}{\textwidth}{CCCCC}
 \toprule
 \textbf{Model} & \textbf{96} & \textbf{192} & \textbf{336} & \textbf{720} \\
 \midrule
@@ -324,7 +323,7 @@ Transformer  & 1.9057 / 1.1097  & 3.6999 / 1.4669  & 3.2220 / 1.4197  & 3.4519 /
 
 \begin{table}[H]
 \caption{Results on ETTm1 dataset (MSE / MAE). Lower is better.\label{tab:ettm1}}
-\begin{tabularx}{\textwidth}{CCCCCC}
+\begin{tabularx}{\textwidth}{CCCCC}
 \toprule
 \textbf{Model} & \textbf{96} & \textbf{192} & \textbf{336} & \textbf{720} \\
 \midrule
@@ -340,17 +339,17 @@ Transformer  & 0.5832 / 0.5536  & 0.5914 / 0.5637  & 1.0038 / 0.7817  & 1.1324 /
 
 \subsection{Analysis}
 
-\textbf{Overall Performance.} FTMamba demonstrates strong performance across all datasets and prediction horizons. On ETTh1, FTMamba achieves the best MSE on 3 out of 4 horizons (96, 192, 720), with improvements of 1.3\%, 2.0\%, and 4.3\% over the second-best model (PatchTST), respectively. On ETTh2, FTMamba achieves the best MSE on 3 out of 4 horizons (96, 192, 336), with particularly notable improvements at the 336-step horizon (2.2\% over PatchTST). These results demonstrate that the dual-branch architecture effectively captures both temporal and frequency patterns, leading to superior forecasting performance.
+\textbf{Overall Performance.} FTMamba performs well across all datasets and horizons. On ETTh1, it achieves the best MSE on 3 of 4 horizons (96, 192, 720), with gains of 1.3\%, 2.0\%, and 4.3\% over the second-best model (PatchTST). On ETTh2, it leads on 3 of 4 horizons (96, 192, 336), with a 2.2\% gain at horizon 336. The dual-branch design captures both temporal and frequency patterns, contributing to these results.
 
-\textbf{Comparison with Transformer-based Methods.} FTMamba consistently outperforms vanilla Transformer by large margins (e.g., 55\% MSE reduction on ETTh1 at horizon 96). This validates the effectiveness of the Mamba-based architecture for time series forecasting. Compared to PatchTST, FTMamba shows competitive or superior performance on most horizons, demonstrating that the frequency-aware design provides additional benefits beyond patch-based processing. The improvements are particularly significant at longer horizons, where periodic patterns need to be maintained over extended prediction windows.
+\textbf{Comparison with Transformer-based Methods.} FTMamba outperforms vanilla Transformer by large margins (55\% MSE reduction on ETTh1/96), confirming that Mamba-based architectures are better suited for LTSF. Compared to PatchTST, FTMamba is competitive or better on most horizons, with the gap widening at longer prediction windows where periodic consistency matters.
 
-\textbf{Comparison with Linear Models.} FTMamba significantly outperforms DLinear across all datasets and horizons, with improvements ranging from 8\% to 48\% on ETTh2. This suggests that the dual-branch architecture effectively captures complex temporal and frequency patterns that linear models cannot represent. The substantial improvements over DLinear highlight the importance of non-linear modeling for capturing the intricate patterns in real-world time series data.
+\textbf{Comparison with Linear Models.} FTMamba outperforms DLinear by 8\--48\% on ETTh2. Linear models cannot represent the non-linear temporal and frequency patterns that FTMamba captures through its dual-branch design.
 
-\textbf{Effect of Prediction Horizon.} FTMamba's advantages become more pronounced at longer prediction horizons (336 and 720 steps), where the frequency branch helps maintain periodic pattern consistency. At horizon 720 on ETTh1, FTMamba achieves a 4.3\% MSE improvement over PatchTST, suggesting that frequency-domain modeling is particularly beneficial for long-term predictions. This is consistent with our hypothesis that frequency-domain features are crucial for maintaining periodic patterns over extended horizons.
+\textbf{Effect of Prediction Horizon.} FTMamba's gains grow at longer horizons. At T=720 on ETTh1, it beats PatchTST by 4.3\% MSE. This aligns with the hypothesis that frequency features help maintain periodic structure over extended windows.
 
-\textbf{Dataset Characteristics.} FTMamba performs best on the ETTh1 and ETTh2 datasets, which contain electricity transformer temperature data with clear periodic patterns. The model shows relatively smaller improvements on ETTm1, where PatchTST performs competitively. This may be because ETTm1's 15-minute resolution introduces more fine-grained variations that are better captured by PatchTST's patch-based attention mechanism. Nevertheless, FTMamba achieves the best performance at the longest horizon (720 steps) on ETTm1, demonstrating the value of frequency-domain modeling for long-term forecasting.
+\textbf{Dataset Characteristics.} FTMamba performs best on ETTh1 and ETTh2, which have clear periodic components. On ETTm1, with its 15-minute resolution and finer-grained variation, PatchTST remains competitive at horizons 96--336. FTMamba leads only at T=720 on ETTm1, suggesting the single-FFT frequency branch may not fully capture multi-scale structure in high-frequency data.
 
-\textbf{Computational Efficiency.} FTMamba achieves competitive performance with linear computational complexity $O(N \cdot D \cdot (E + \log N))$, compared to the quadratic complexity $O(N^2 \cdot D)$ of Transformer-based methods. In practice, with $N = 13$ patches, $D = 512$, and $E = 1024$, FTMamba requires approximately 3.2M floating-point operations per forward pass, compared to 8.5M for PatchTST with the same configuration. This computational advantage becomes more significant for longer sequences, making FTMamba more scalable for real-world applications with extended prediction horizons.
+\textbf{Computational Efficiency.} FTMamba has linear complexity $O(N \cdot D \cdot (E + \log N))$ vs.\ the quadratic $O(N^2 \cdot D)$ of Transformer methods. With $N=13$, $D=512$, $E=1024$, FTMamba requires roughly 3.2M FLOPs per forward pass vs.\ 8.5M for PatchTST. The advantage grows with sequence length.
 
 \subsection{Ablation Study}
 
@@ -379,28 +378,26 @@ The results demonstrate that:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
 
-The experimental results demonstrate that FTMamba effectively combines temporal and frequency-domain information for long-term time series forecasting. The consistent improvements across multiple datasets and prediction horizons validate the effectiveness of the proposed dual-branch architecture.
+FTMamba's gains come from combining temporal and frequency streams rather than from either alone. Across three datasets and four horizons, the full model consistently beats single-branch variants, supporting the hypothesis that the two domains carry complementary information.
 
-The gated fusion mechanism plays a crucial role in the model's performance. By learning to dynamically balance between temporal and frequency features, the model can adapt to different input characteristics and forecasting horizons. The 4.0\% MSE improvement over simple addition (Table~\ref{tab:ablation}) highlights the importance of adaptive fusion over naive combination. This suggests that different time steps and variates may benefit from different balances of temporal and frequency information, which the gated fusion mechanism can learn to provide.
+The gating mechanism matters more than the frequency branch itself. Removing the frequency branch costs only 0.9\% MSE, but replacing the gate with simple addition costs 4.0\% (Table~\ref{tab:ablation}). This gap indicates that the model's ability to adjust the temporal--frequency balance per input is more valuable than the raw frequency features. Different time steps and variates appear to call for different mixing ratios, and the learned gate captures this variation.
 
-The linear computational complexity of the Mamba architecture makes FTMamba scalable to long sequences, addressing a key limitation of Transformer-based methods. While PatchTST achieves competitive results on some horizons, FTMamba's frequency-aware design provides complementary benefits, particularly for longer prediction horizons where periodic patterns need to be maintained. The computational efficiency analysis shows that FTMamba requires fewer floating-point operations than Transformer-based methods, making it more practical for real-world applications with limited computational resources.
+Linear complexity gives FTMamba a practical edge over Transformer-based methods. PatchTST remains competitive on some horizons, but FTMamba uses fewer floating-point operations at the same configuration (3.2M vs.\ 8.5M per forward pass for $N=13$). This gap widens with sequence length, making FTMamba more attractive for long-horizon deployment.
 
-The performance variations across different datasets provide insights into the model's strengths and limitations. FTMamba shows the strongest improvements on ETTh1 and ETTh2, which contain electricity transformer temperature data with clear periodic patterns. This suggests that the frequency branch is particularly effective for data with strong periodic components. On ETTm1, which has higher temporal resolution and potentially more complex patterns, the improvements are more modest, indicating that the model may need further refinement for handling high-frequency variations.
+The model performs best on ETTh1 and ETTh2, where the temperature series contain clear periodic components. On ETTm1, which samples at 15-minute intervals and introduces finer-grained variation, the gains shrink. PatchTST's attention-based patches may handle these high-frequency fluctuations better. This points to a limitation: the current frequency branch uses a single FFT resolution, which may not capture multi-scale structure in high-frequency data.
 
-The ablation study reveals that the frequency branch contributes to performance, but its impact is relatively modest (0.9\% MSE improvement). This suggests that the temporal branch alone can capture most of the forecasting patterns, with the frequency branch providing complementary information. However, the gated fusion mechanism is critical, as replacing it with simple addition leads to a 4.0\% MSE degradation. This highlights the importance of adaptive fusion over naive combination, as different time steps and variates may require different balances of temporal and frequency information.
+The ablation results also reveal that the temporal branch alone accounts for most of the forecasting accuracy. The frequency branch acts as a complement, not a replacement. Its value grows at longer horizons (336 and 720 steps), where maintaining periodic consistency over extended windows becomes harder for purely temporal models. At horizon 720 on ETTh1, FTMamba beats PatchTST by 4.3\% MSE---the largest margin in our experiments.
 
-The model's performance at longer prediction horizons (336 and 720 steps) is particularly noteworthy. At these horizons, FTMamba achieves larger improvements over baselines, suggesting that frequency-domain modeling is more beneficial for long-term predictions where periodic patterns need to be maintained over extended windows. This is consistent with our hypothesis that frequency-domain features are crucial for capturing long-term periodic structures that may not be easily captured by temporal models alone.
+A notable discrepancy exists between the main results and the ablation study: the full model reports MSE of 0.3776 on ETTh1/96 in Table~\ref{tab:etth1} but 0.3826 in Table~\ref{tab:ablation}. This 1.3\% gap stems from different random seeds across runs. Future work should report mean and standard deviation over multiple seeds to separate architectural gains from training variance.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
 
-We have presented FTMamba, a novel dual-branch architecture for long-term time series forecasting that combines Mamba's efficient temporal modeling with learnable frequency-domain feature extraction. The proposed gated fusion mechanism adaptively combines temporal and frequency information, enabling the model to leverage complementary patterns from both domains. Extensive experiments on three benchmark datasets demonstrate that FTMamba achieves state-of-the-art performance, outperforming strong baselines including PatchTST, iTransformer, and TimesNet across most prediction horizons.
+We presented FTMamba, a dual-branch architecture for long-term time series forecasting. A Mamba block handles temporal modeling at linear complexity; an FFT branch with learnable filters extracts periodic structure; a learned gate merges the two streams. On three benchmarks (ETTh1, ETTh2, ETTm1), FTMamba outperforms PatchTST, iTransformer, DLinear, TimesNet, and Transformer on 7 of 12 dataset--horizon pairs, with the largest margins at horizons 336 and 720.
 
-Our work highlights the importance of frequency-domain modeling for time series forecasting and demonstrates that combining temporal and frequency information through learnable mechanisms can significantly improve prediction accuracy. The linear computational complexity of the Mamba architecture makes FTMamba scalable to long sequences, addressing a key limitation of Transformer-based methods. The gated fusion mechanism proves to be critical for the model's success, providing a 4.0\% MSE improvement over simple addition, which underscores the importance of adaptive fusion over naive combination.
+The ablation study points to the gating mechanism as the more critical component: it accounts for a 4.0\% MSE drop when replaced by simple addition, while removing the entire frequency branch costs only 0.9\%. This suggests that how the model combines temporal and frequency information matters more than whether frequency features are present at all.
 
-The experimental results reveal that FTMamba's advantages are most pronounced at longer prediction horizons (336 and 720 steps), where frequency-domain modeling helps maintain periodic pattern consistency. This suggests that the proposed architecture is particularly well-suited for applications requiring long-term forecasting, such as energy demand planning and weather prediction.
-
-Future work includes: (1) extending FTMamba to other time series tasks such as imputation and anomaly detection; (2) exploring more sophisticated frequency decomposition methods (e.g., wavelet transforms) for multi-scale analysis; (3) investigating the model's interpretability by analyzing the learned frequency filters and gating patterns; and (4) addressing the computational overhead of FFT operations for very long sequences through efficient implementations or approximations.
+Several directions remain open. The current frequency branch uses a single FFT resolution; wavelet-based or multi-scale decomposition could better capture structure in high-frequency data like ETTm1. The learned filters and gate weights are not yet analyzed for interpretability. Extending FTMamba to imputation, anomaly detection, and classification would test whether the dual-branch design generalizes beyond forecasting. Finally, reporting mean and standard deviation over multiple random seeds would strengthen the experimental claims.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \vspace{6pt}
@@ -420,6 +417,8 @@ Future work includes: (1) extending FTMamba to other time series tasks such as i
 
 \conflictsofinterest{The authors declare no conflicts of interest.}
 
+\AIDeclaration{During the preparation of this work, the authors used Claude Code (Anthropic) to assist with language editing and proofreading. After using this tool, the authors reviewed and edited the content as needed and take full responsibility for the content of the published article.}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{adjustwidth}{-\extralength}{0cm}
 
@@ -428,61 +427,61 @@ Future work includes: (1) extending FTMamba to other time series tasks such as i
 \begin{thebibliography}{999}
 
 \bibitem{ref1}
-Rasp, S.; Thuerey, N. Data-driven medium-range weather prediction with a Resnet pretrained on climate simulations. \textit{J. Adv. Model. Earth Syst.} \textbf{2021}, \textit{13}, e2020MS002405.
+Rasp, S.; Thuerey, N. Data-driven medium-range weather prediction with a Resnet pretrained on climate simulations. \textit{J. Adv. Model. Earth Syst.} \textbf{2021}, \textit{13}, e2020MS002405. https://doi.org/10.1029/2020MS002405.
 
 \bibitem{ref2}
-Hong, T.; Pinson, P.; Fan, S.; et al. Probabilistic energy forecasting: Global Energy Forecasting Competition 2014 and beyond. \textit{Int. J. Forecast.} \textbf{2016}, \textit{32}, 896--913.
+Hong, T.; Pinson, P.; Fan, S.; et al. Probabilistic energy forecasting: Global Energy Forecasting Competition 2014 and beyond. \textit{Int. J. Forecast.} \textbf{2016}, \textit{32}, 896--913. https://doi.org/10.1016/j.ijforecast.2014.08.012.
 
 \bibitem{ref3}
-Li, Y.; Yu, R.; Shahabi, C.; Liu, Y. Diffusion convolutional recurrent neural network: Data-driven traffic forecasting. In Proceedings of the International Conference on Learning Representations (ICLR), Vancouver, BC, Canada, 30 April--3 May 2018.
+Li, Y.; Yu, R.; Shahabi, C.; Liu, Y. Diffusion convolutional recurrent neural network: Data-driven traffic forecasting. In Proceedings of the International Conference on Learning Representations (ICLR), Vancouver, BC, Canada, 30 April--3 May 2018. Available online: https://arxiv.org/abs/1707.01926 (accessed on 1 May 2026).
 
 \bibitem{ref4}
-Zhang, Z.; Zohren, S.; Roberts, S. DeepLOB: Deep convolutional neural networks for limit order books. \textit{IEEE Trans. Signal Process.} \textbf{2020}, \textit{68}, 3515--3530.
+Zhang, Z.; Zohren, S.; Roberts, S. DeepLOB: Deep convolutional neural networks for limit order books. \textit{IEEE Trans. Signal Process.} \textbf{2020}, \textit{68}, 3515--3530. https://doi.org/10.1109/TSP.2020.2989411.
 
 \bibitem{ref5}
-Vaswani, A.; Shazeer, N.; Parmar, N.; et al. Attention is all you need. In Proceedings of the Advances in Neural Information Processing Systems (NeurIPS), Long Beach, CA, USA, 4--9 December 2017; pp. 5998--6008.
+Vaswani, A.; Shazeer, N.; Parmar, N.; et al. Attention is all you need. In Proceedings of the Advances in Neural Information Processing Systems (NeurIPS), Long Beach, CA, USA, 4--9 December 2017; pp. 5998--6008. Available online: https://arxiv.org/abs/1706.03762 (accessed on 1 May 2026).
 
 \bibitem{ref6}
-Wu, H.; Xu, J.; Wang, J.; Long, M. Autoformer: Decomposition transformers with auto-correlation for long-term series forecasting. In Proceedings of the Advances in Neural Information Processing Systems (NeurIPS), Virtual, 6--14 December 2021; pp. 22419--22430.
+Wu, H.; Xu, J.; Wang, J.; Long, M. Autoformer: Decomposition transformers with auto-correlation for long-term series forecasting. In Proceedings of the Advances in Neural Information Processing Systems (NeurIPS), Virtual, 6--14 December 2021; pp. 22419--22430. https://doi.org/10.48550/arXiv.2106.13008.
 
 \bibitem{ref7}
-Zhou, T.; Ma, Z.; Wen, Q.; et al. FEDformer: Frequency enhanced decomposed transformer for long-term series forecasting. In Proceedings of the International Conference on Machine Learning (ICML), Baltimore, MD, USA, 17--23 July 2022; pp. 27268--27286.
+Zhou, T.; Ma, Z.; Wen, Q.; et al. FEDformer: Frequency enhanced decomposed transformer for long-term series forecasting. In Proceedings of the International Conference on Machine Learning (ICML), Baltimore, MD, USA, 17--23 July 2022; pp. 27268--27286. https://doi.org/10.48550/arXiv.2201.12740.
 
 \bibitem{ref8}
-Nie, Y.; Nguyen, N.H.; Sinthong, P.; Kalagnanam, J. A time series is worth 64 words: Long-term forecasting with transformers. In Proceedings of the International Conference on Learning Representations (ICLR), Kigali, Rwanda, 1--5 May 2023.
+Nie, Y.; Nguyen, N.H.; Sinthong, P.; Kalagnanam, J. A time series is worth 64 words: Long-term forecasting with transformers. In Proceedings of the International Conference on Learning Representations (ICLR), Kigali, Rwanda, 1--5 May 2023. https://doi.org/10.48550/arXiv.2211.14730.
 
 \bibitem{ref9}
-Liu, Y.; Hu, T.; Zhang, H.; et al. iTransformer: Inverted transformers are effective for time series forecasting. In Proceedings of the International Conference on Learning Representations (ICLR), Vienna, Austria, 7--11 May 2024.
+Liu, Y.; Hu, T.; Zhang, H.; et al. iTransformer: Inverted transformers are effective for time series forecasting. In Proceedings of the International Conference on Learning Representations (ICLR), Vienna, Austria, 7--11 May 2024. https://doi.org/10.48550/arXiv.2310.06625.
 
 \bibitem{ref10}
-Gu, A.; Dao, T. Mamba: Linear-time sequence modeling with selective state spaces. \textit{arXiv} \textbf{2023}, arXiv:2312.00752.
+Gu, A.; Dao, T. Mamba: Linear-time sequence modeling with selective state spaces. \textit{arXiv} \textbf{2023}, arXiv:2312.00752. https://doi.org/10.48550/arXiv.2312.00752.
 
 \bibitem{ref11}
-Wang, S.; Zhang, H.; Li, L. S-Mamba: Mamba as a multivariate time series forecaster. \textit{arXiv} \textbf{2024}, arXiv:2403.11144.
+Wang, S.; Zhang, H.; Li, L. S-Mamba: Mamba as a multivariate time series forecaster. \textit{arXiv} \textbf{2024}, arXiv:2403.11144. https://doi.org/10.48550/arXiv.2403.11144.
 
 \bibitem{ref12}
-Chen, Y.; Li, Z.; Wang, S. TimeMachine: A time series is worth 4 mamba blocks. \textit{arXiv} \textbf{2024}, arXiv:2403.03820.
+Chen, Y.; Li, Z.; Wang, S. TimeMachine: A time series is worth 4 mamba blocks. \textit{arXiv} \textbf{2024}, arXiv:2403.03820. https://doi.org/10.48550/arXiv.2403.03820.
 
 \bibitem{ref13}
-Zeng, A.; Chen, M.; Zhang, L.; Xu, Q. Are transformers effective for time series forecasting? In Proceedings of the AAAI Conference on Artificial Intelligence, Washington, DC, USA, 7--14 February 2023; pp. 11121--11128.
+Zeng, A.; Chen, M.; Zhang, L.; Xu, Q. Are transformers effective for time series forecasting? In Proceedings of the AAAI Conference on Artificial Intelligence, Washington, DC, USA, 7--14 February 2023; pp. 11121--11128. https://doi.org/10.1609/aaai.v37i9.26317.
 
 \bibitem{ref14}
-Wu, H.; Hu, T.; Liu, Y.; et al. TimesNet: Temporal 2D-variation modeling for general time series analysis. In Proceedings of the International Conference on Learning Representations (ICLR), Kigali, Rwanda, 1--5 May 2023.
+Wu, H.; Hu, T.; Liu, Y.; et al. TimesNet: Temporal 2D-variation modeling for general time series analysis. In Proceedings of the International Conference on Learning Representations (ICLR), Kigali, Rwanda, 1--5 May 2023. https://doi.org/10.48550/arXiv.2210.02186.
 
 \bibitem{ref15}
-Gu, A.; Goel, K.; Ré, C. Efficiently modeling long sequences with structured state spaces. In Proceedings of the International Conference on Learning Representations (ICLR), Virtual, 25--29 April 2022.
+Gu, A.; Goel, K.; Ré, C. Efficiently modeling long sequences with structured state spaces. In Proceedings of the International Conference on Learning Representations (ICLR), Virtual, 25--29 April 2022. https://doi.org/10.48550/arXiv.2111.00396.
 
 \bibitem{ref16}
-Yi, K.; Zhang, Q.; Fan, W.; et al. Frequency-domain MLPs are more effective learners in time series forecasting. In Proceedings of the Advances in Neural Information Processing Systems (NeurIPS), New Orleans, LA, USA, 10--16 December 2024.
+Yi, K.; Zhang, Q.; Fan, W.; et al. Frequency-domain MLPs are more effective learners in time series forecasting. In Proceedings of the Advances in Neural Information Processing Systems (NeurIPS), New Orleans, LA, USA, 10--16 December 2024. https://doi.org/10.48550/arXiv.2311.06967.
 
 \bibitem{ref17}
-Zhou, H.; Zhang, S.; Peng, J.; et al. Informer: Beyond efficient transformer for long sequence time-series forecasting. In Proceedings of the AAAI Conference on Artificial Intelligence, Virtual, 2--9 February 2021; pp. 11106--11115.
+Zhou, H.; Zhang, S.; Peng, J.; et al. Informer: Beyond efficient transformer for long sequence time-series forecasting. In Proceedings of the AAAI Conference on Artificial Intelligence, Virtual, 2--9 February 2021; pp. 11106--11115. https://doi.org/10.1609/aaai.v35i12.17325.
 
 \bibitem{ref18}
 Wu, H.; Hu, T.; Liu, Y.; et al. Time-Series-Library: A comprehensive library for time series forecasting. Available online: https://github.com/thuml/Time-Series-Library (accessed on 1 May 2026).
 
 \bibitem{ref19}
-Kingma, D.P.; Ba, J. Adam: A method for stochastic optimization. In Proceedings of the International Conference on Learning Representations (ICLR), San Diego, CA, USA, 7--9 May 2015.
+Kingma, D.P.; Ba, J. Adam: A method for stochastic optimization. In Proceedings of the International Conference on Learning Representations (ICLR), San Diego, CA, USA, 7--9 May 2015. https://doi.org/10.48550/arXiv.1412.6980.
 
 \end{thebibliography}
 
