@@ -107,13 +107,14 @@ class FrequencyBranch(nn.Module):
     Applies FFT, learnable frequency filtering, and iFFT.
     """
 
-    def __init__(self, d_model, seq_len):
+    def __init__(self, d_model, seq_len, fixed=False):
         super().__init__()
         self.d_model = d_model
         self.seq_len = seq_len
+        self.fixed = fixed
         # Learnable frequency filter (complex-valued via real/imag parts)
-        self.freq_filter_real = nn.Parameter(torch.ones(1, 1, seq_len // 2 + 1))
-        self.freq_filter_imag = nn.Parameter(torch.zeros(1, 1, seq_len // 2 + 1))
+        self.freq_filter_real = nn.Parameter(torch.ones(1, 1, seq_len // 2 + 1), requires_grad=not fixed)
+        self.freq_filter_imag = nn.Parameter(torch.zeros(1, 1, seq_len // 2 + 1), requires_grad=not fixed)
         # Projection after frequency processing
         self.proj = nn.Linear(d_model, d_model)
         self.norm = nn.LayerNorm(d_model)
@@ -158,11 +159,14 @@ class GatedFusion(nn.Module):
 class FTMambaLayer(nn.Module):
     """Single FTMamba layer: Mamba + Frequency + Gated Fusion."""
 
-    def __init__(self, d_model, d_state=16, d_conv=4, expand=2, seq_len=96):
+    def __init__(self, d_model, d_state=16, d_conv=4, expand=2, seq_len=96, ablation_mode="full"):
         super().__init__()
+        self.ablation_mode = ablation_mode
         self.temporal_branch = MambaBlock(d_model, d_state, d_conv, expand)
-        self.frequency_branch = FrequencyBranch(d_model, seq_len)
-        self.fusion = GatedFusion(d_model)
+        if ablation_mode != "no_freq":
+            self.frequency_branch = FrequencyBranch(d_model, seq_len, fixed=(ablation_mode == "fixed_freq"))
+        if ablation_mode == "full":
+            self.fusion = GatedFusion(d_model)
         self.norm = nn.LayerNorm(d_model)
 
     def forward(self, x):
@@ -170,8 +174,14 @@ class FTMambaLayer(nn.Module):
         x: [B * n_vars, patch_num, d_model]
         """
         h_temp = self.temporal_branch(x)
-        h_freq = self.frequency_branch(x)
-        h_fused = self.fusion(h_temp, h_freq)
+        if self.ablation_mode == "no_freq":
+            h_fused = h_temp
+        elif self.ablation_mode == "add_fusion":
+            h_freq = self.frequency_branch(x)
+            h_fused = h_temp + h_freq
+        else:
+            h_freq = self.frequency_branch(x)
+            h_fused = self.fusion(h_temp, h_freq)
         return self.norm(h_fused + x)  # residual connection
 
 
@@ -189,6 +199,7 @@ class Model(nn.Module):
         self.seq_len = configs.seq_len
         self.pred_len = configs.pred_len
         padding = stride
+        ablation_mode = getattr(configs, 'ablation_mode', 'full')
 
         # Patch embedding
         self.patch_embedding = PatchEmbedding(
@@ -206,6 +217,7 @@ class Model(nn.Module):
                 d_conv=configs.d_conv,
                 expand=configs.expand,
                 seq_len=self.patch_num,
+                ablation_mode=ablation_mode,
             )
             for _ in range(configs.e_layers)
         ])
