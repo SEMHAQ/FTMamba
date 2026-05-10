@@ -94,7 +94,8 @@ def plot_dataset(ax, data, title, show_ylabel=False, show_legend=False):
         ax.set_ylim(0, 1.15)
         # Mark clipped bars
     if show_legend:
-        ax.legend(loc='upper left', ncol=2, framealpha=0.9, edgecolor='#cccccc')
+        ax.legend(loc='upper right', ncol=2, framealpha=0.9, edgecolor='#cccccc',
+                  fontsize=6.5)
 
 
 # ── Figure 1: Main results (3 subplots) ──────────────────────────────
@@ -136,7 +137,7 @@ for bar, val in zip(bars_mae, ablation_mae):
 
 ax2.set_xticks(x2)
 ax2.set_xticklabels(ablation_configs, fontsize=9)
-ax2.set_ylabel('Error')
+ax2.set_ylabel('Metric Value')
 ax2.set_title('Ablation on ETTh1 (horizon=96)', fontweight='bold', pad=6)
 ax2.legend(framealpha=0.9, edgecolor='#cccccc')
 ax2.grid(axis='y', alpha=0.3, zorder=0)

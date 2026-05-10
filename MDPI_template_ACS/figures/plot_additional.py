@@ -76,7 +76,8 @@ ax.text(n_true + 2, ax.get_ylim()[1] - 0.02, 'Prediction start',
 
 ax.set_ylabel('Value (normalized)')
 ax.set_title('ETTh1 Forecast Comparison (horizon = 96)', fontweight='bold', pad=6)
-ax.legend(loc='upper left', ncol=3, framealpha=0.9, edgecolor='#cccccc')
+ax.legend(loc='upper right', ncol=2, framealpha=0.9, edgecolor='#cccccc',
+          fontsize=7)
 ax.grid(axis='both', alpha=0.2)
 
 # Bottom panel: absolute error
