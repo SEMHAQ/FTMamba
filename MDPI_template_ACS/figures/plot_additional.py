@@ -108,55 +108,48 @@ print('Saved fig_prediction_curve.pdf and .png')
 seq_lengths = [96, 192, 336, 480, 672, 720, 960]
 D = 512
 E = 1024
+C = 7       # number of variates (ETT datasets)
 P = 16
 S = 8
 
 def ftmamba_flops(L):
     N = (L - P) // S + 2
-    # Mamba: O(N * D * E) per layer, 3 layers
     mamba = 3 * N * D * E
-    # FFT: O(N * D * logN) per layer
     fft = 3 * N * D * np.log2(max(N, 1))
-    # Gated fusion: O(N * D) per layer
     gate = 3 * N * D * 2
-    # Patch embedding + prediction head
     embed = L * D
     head = N * D * 96
     return mamba + fft + gate + embed + head
 
 def transformer_flops(L):
     N = (L - P) // S + 2
-    # Self-attention: O(N^2 * D) per layer, 3 layers
     attn = 3 * N * N * D
-    # FFN: O(N * D * D) per layer
     ffn = 3 * N * D * D
-    # Patch embedding + prediction head
     embed = L * D
     head = N * D * 96
     return attn + ffn + embed + head
 
-def patchtst_flops(L):
+def itransformer_flops(L):
+    # Attention across C variates (constant w.r.t. L), FFN per variate
     N = (L - P) // S + 2
-    # Self-attention: O(N^2 * D) per layer, 3 layers
-    attn = 3 * N * N * D
-    # FFN
-    ffn = 3 * N * D * D
+    attn = 3 * C * C * D
+    ffn = 3 * C * N * D * D
     embed = L * D
     head = N * D * 96
     return attn + ffn + embed + head
 
 flops_ftmamba = [ftmamba_flops(L) / 1e6 for L in seq_lengths]
-flops_patchtst = [patchtst_flops(L) / 1e6 for L in seq_lengths]
 flops_transformer = [transformer_flops(L) / 1e6 for L in seq_lengths]
+flops_itransformer = [itransformer_flops(L) / 1e6 for L in seq_lengths]
 
 fig2, ax3 = plt.subplots(figsize=(4.0, 3.2))
 
 ax3.plot(seq_lengths, flops_ftmamba, 'o-', color='#2171B5', linewidth=1.5,
-         markersize=5, label='FTMamba ($O(N \\cdot D \\cdot E)$)')
-ax3.plot(seq_lengths, flops_patchtst, 's--', color='#6BAED6', linewidth=1.2,
-         markersize=4, label='PatchTST ($O(N^2 \\cdot D)$)')
-ax3.plot(seq_lengths, flops_transformer, '^:', color='#E34A33', linewidth=1.2,
-         markersize=4, label='Transformer ($O(N^2 \\cdot D)$)')
+         markersize=5, label='FTMamba (linear)')
+ax3.plot(seq_lengths, flops_transformer, 's--', color='#E34A33', linewidth=1.2,
+         markersize=4, label='PatchTST / Transformer (quadratic)')
+ax3.plot(seq_lengths, flops_itransformer, '^:', color='#FDBB84', linewidth=1.2,
+         markersize=4, label='iTransformer (near-constant)')
 
 ax3.set_xlabel('Lookback Window Length ($L$)')
 ax3.set_ylabel('FLOPs (M)')

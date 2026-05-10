@@ -359,7 +359,7 @@ Transformer  & 0.5832 / 0.5536  & 0.5914 / 0.5637  & 1.0038 / 0.7817  & 1.1324 /
 
 \begin{figure}[H]
 \includegraphics[width=0.55\textwidth]{figures/fig_efficiency.pdf}
-\caption{Computational cost (FLOPs) as a function of lookback window length $L$. FTMamba scales linearly, while PatchTST and Transformer scale quadratically. Model dimension $D=512$, expanded dimension $E=1024$, patch size $P=16$, stride $S=8$.\label{fig:efficiency}}
+\caption{Computational cost (FLOPs) as a function of lookback window length $L$. FTMamba scales linearly, PatchTST/Transformer scale quadratically, and iTransformer is near-constant (attention across $C{=}7$ variates). $D{=}512$, $E{=}1024$, $P{=}16$, $S{=}8$.\label{fig:efficiency}}
 \end{figure}
 \unskip
 
