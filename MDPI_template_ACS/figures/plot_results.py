@@ -63,38 +63,77 @@ plt.rcParams.update({
 })
 
 
-def plot_dataset(ax, data, title, show_ylabel=False):
+def plot_bars(ax, data, show_ylabel=False):
+    """Draw grouped bars on a single axes."""
     n_h = len(horizons)
-    n_m = len(models)
     x = np.arange(n_h)
     width = 0.13
-    offsets = np.arange(n_m) - (n_m - 1) / 2
-
+    offsets = np.arange(len(models)) - (len(models) - 1) / 2
     for i, model in enumerate(models):
         vals = data[model]
         ax.bar(x + offsets[i] * width, vals, width,
                label=model if show_ylabel else None,
                color=colors[i], edgecolor='white',
                linewidth=0.5, zorder=3)
-
     ax.set_xticks(x)
     ax.set_xticklabels([str(h) for h in horizons])
-    ax.set_xlabel('Prediction Horizon')
-    if show_ylabel:
-        ax.set_ylabel('MSE')
-    ax.set_title(title, fontweight='bold', pad=6)
     ax.grid(axis='y', alpha=0.3, zorder=0)
     ax.set_axisbelow(True)
-    if title == '(b) ETTh2':
-        ax.set_ylim(0, 1.05)
 
 
-# ── Figure 1: Main results (3 subplots) ──────────────────────────────
-fig, axes = plt.subplots(1, 3, figsize=(7.2, 2.8), sharey=False)
+def draw_break(ax_bottom, ax_top):
+    """Draw diagonal break marks between two stacked axes."""
+    d = 0.015
+    kwargs = dict(transform=ax_bottom.transAxes, color='k', clip_on=False,
+                  linewidth=0.8)
+    ax_bottom.plot((-d, +d), (1 - d, 1 + d), **kwargs)
+    ax_bottom.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)
+    kwargs.update(transform=ax_top.transAxes)
+    ax_top.plot((-d, +d), (-d, +d), **kwargs)
+    ax_top.plot((1 - d, 1 + d), (-d, +d), **kwargs)
 
-plot_dataset(axes[0], etth1, '(a) ETTh1', show_ylabel=True)
-plot_dataset(axes[1], etth2, '(b) ETTh2')
-plot_dataset(axes[2], ettm1, '(c) ETTm1')
+
+# ── Figure 1: Main results (3 columns, broken axis for ETTh2) ───────
+import matplotlib.gridspec as gridspec
+
+fig = plt.figure(figsize=(7.2, 3.0), layout='constrained')
+gs = gridspec.GridSpec(1, 3, wspace=0.45, figure=fig)
+
+# (a) ETTh1 — single axes
+ax_a = fig.add_subplot(gs[0, 0])
+plot_bars(ax_a, etth1, show_ylabel=True)
+ax_a.set_xlabel('Prediction Horizon')
+ax_a.set_ylabel('MSE')
+ax_a.set_title('(a) ETTh1', fontweight='bold', pad=6)
+ax_a.set_ylim(0.35, 1.15)
+
+# (b) ETTh2 — broken axis: bottom 0-1.0, top 1.5-4.0
+gs_b = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[0, 1],
+                                         hspace=0.08, height_ratios=[1, 1])
+ax_b_top = fig.add_subplot(gs_b[0])
+ax_b_bot = fig.add_subplot(gs_b[1], sharex=ax_b_top)
+
+plot_bars(ax_b_bot, etth2)
+plot_bars(ax_b_top, etth2)
+
+ax_b_bot.set_ylim(0, 1.0)
+ax_b_top.set_ylim(1.5, 4.0)
+
+ax_b_bot.set_xlabel('Prediction Horizon')
+ax_b_bot.set_ylabel('MSE')
+ax_b_top.set_title('(b) ETTh2', fontweight='bold', pad=6)
+
+# Hide x-axis on top subplot
+plt.setp(ax_b_top.get_xticklabels(), visible=False)
+
+draw_break(ax_b_bot, ax_b_top)
+
+# (c) ETTm1 — single axes
+ax_c = fig.add_subplot(gs[0, 2])
+plot_bars(ax_c, ettm1)
+ax_c.set_xlabel('Prediction Horizon')
+ax_c.set_title('(c) ETTm1', fontweight='bold', pad=6)
+ax_c.set_ylim(0.3, 1.2)
 
 # Shared legend below the figure
 handles = [plt.Rectangle((0, 0), 1, 1, facecolor=c, edgecolor='white',
@@ -103,8 +142,7 @@ fig.legend(handles, models, loc='lower center', ncol=6, fontsize=7.5,
            framealpha=0.9, edgecolor='#cccccc',
            bbox_to_anchor=(0.5, -0.02))
 
-fig.tight_layout(w_pad=1.5, rect=[0, 0.04, 1, 1])
-fig.savefig('fig_main_results.pdf')
+fig.savefig('fig_main_results.pdf', bbox_inches='tight')
 fig.savefig('fig_main_results.png', dpi=300)
 print('Saved fig_main_results.pdf and .png')
 

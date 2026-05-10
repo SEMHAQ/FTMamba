@@ -71,8 +71,8 @@ ax.plot(t[n_true:], pred_dlinear, color='#FDBB84', linewidth=0.9,
 # Shade prediction region
 ax.axvspan(n_true, n_total, alpha=0.06, color='#2171B5')
 ax.axvline(n_true, color='#999999', linewidth=0.6, linestyle='--')
-ax.text(n_true, ax.get_ylim()[0] + 0.01, 'Prediction start',
-        fontsize=7, color='#666666', va='bottom', ha='center')
+ax.text(n_true + 2, ax.get_ylim()[0] + 0.01, 'Prediction start',
+        fontsize=7, color='#666666', va='bottom', ha='left')
 
 ax.set_ylabel('Value (normalized)')
 ax.set_title('ETTh1 Forecast Comparison (horizon = 96)', fontweight='bold', pad=6)
