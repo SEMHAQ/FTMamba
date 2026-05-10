@@ -96,8 +96,9 @@ def draw_break(ax_bottom, ax_top):
 # ── Figure 1: Main results (3 columns, broken axis for ETTh2) ───────
 import matplotlib.gridspec as gridspec
 
-fig = plt.figure(figsize=(7.2, 3.0), layout='constrained')
-gs = gridspec.GridSpec(1, 3, wspace=0.45, figure=fig)
+fig = plt.figure(figsize=(7.2, 3.6))
+gs = gridspec.GridSpec(1, 3, wspace=0.45, figure=fig,
+                       bottom=0.12, top=0.92, left=0.07, right=0.97)
 
 # (a) ETTh1 — single axes
 ax_a = fig.add_subplot(gs[0, 0])
@@ -139,10 +140,9 @@ ax_c.set_ylim(0.3, 1.2)
 handles = [plt.Rectangle((0, 0), 1, 1, facecolor=c, edgecolor='white',
                            linewidth=0.5) for c in colors]
 fig.legend(handles, models, loc='lower center', ncol=6, fontsize=7.5,
-           framealpha=0.9, edgecolor='#cccccc',
-           bbox_to_anchor=(0.5, -0.02))
+           framealpha=0.9, edgecolor='#cccccc')
 
-fig.savefig('fig_main_results.pdf', bbox_inches='tight')
+fig.savefig('fig_main_results.pdf')
 fig.savefig('fig_main_results.png', dpi=300)
 print('Saved fig_main_results.pdf and .png')
 
