@@ -86,7 +86,7 @@ def plot_dataset(ax, data, title, show_ylabel=False):
     ax.grid(axis='y', alpha=0.3, zorder=0)
     ax.set_axisbelow(True)
     if title == '(b) ETTh2':
-        ax.set_ylim(0, 1.35)
+        ax.set_ylim(0, 1.5)
 
 
 # ── Figure 1: Main results (3 subplots) ──────────────────────────────
