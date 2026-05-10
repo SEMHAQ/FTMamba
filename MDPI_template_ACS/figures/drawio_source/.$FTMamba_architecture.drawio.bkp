@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="FTMamba Architecture">
+    <mxGraphModel dx="1100" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1200">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- 1. Input -->
+        <mxCell id="2" value="Input Time Series (L &amp;times; C)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="30" width="220" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Input -> Instance Norm -->
+        <mxCell id="3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#333333;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="2" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 2. Instance Normalization -->
+        <mxCell id="4" value="Instance Normalization" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="350" y="100" width="200" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Instance Norm -> Patch Embed -->
+        <mxCell id="5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#333333;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="4" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 3. Patch Embedding -->
+        <mxCell id="6" value="Patch Embedding&lt;div&gt;&lt;span style=&quot;font-size:9px;color:#666&quot;&gt;Linear + Positional Encoding&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="170" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Patch Embed -> container -->
+        <mxCell id="8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#333333;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 4. FTMamba Layer container -->
+        <mxCell id="7" value="FTMamba Layer &amp;times; N&lt;sub&gt;l&lt;/sub&gt;" style="swimlane;startSize=30;rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#9673a6;dashed=1;strokeDasharray=8 4;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#9673a6;container=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="100" y="250" width="700" height="340" as="geometry" />
+        </mxCell>
+
+        <!-- 4a. Temporal Branch -->
+        <mxCell id="10" value="Temporal Branch&lt;div&gt;&lt;span style=&quot;font-size:9px;color:#4472C4&quot;&gt;Mamba Block (Selective Scan)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="7">
+          <mxGeometry x="50" y="55" width="240" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- 4b. Frequency Branch -->
+        <mxCell id="11" value="Frequency Branch&lt;div&gt;&lt;span style=&quot;font-size:9px;color:#ed7d31&quot;&gt;FFT &amp;rarr; Learnable Filter &amp;rarr; iFFT&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#ed7d31;fontSize=13;fontStyle=1;" vertex="1" parent="7">
+          <mxGeometry x="410" y="55" width="240" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- 4c. Gated Fusion -->
+        <mxCell id="14" value="Gated Fusion&lt;div&gt;&lt;span style=&quot;font-size:9px;color:#548235&quot;&gt;&amp;sigma;(Linear([h&lt;sub&gt;temp&lt;/sub&gt;; h&lt;sub&gt;freq&lt;/sub&gt;]))&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2efda;strokeColor=#548235;fontSize=13;fontStyle=1;" vertex="1" parent="7">
+          <mxGeometry x="170" y="175" width="300" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Temporal -> Gated Fusion -->
+        <mxCell id="15" value="h&lt;sub&gt;temp&lt;/sub&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#6c8ebf;exitX=0.5;exitY=1;entryX=0.3;entryY=0;fontSize=10;fontColor=#4472C4;fontStyle=2;" edge="1" parent="7" source="10" target="14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Frequency -> Gated Fusion -->
+        <mxCell id="16" value="h&lt;sub&gt;freq&lt;/sub&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#ed7d31;exitX=0.5;exitY=1;entryX=0.7;entryY=0;fontSize=10;fontColor=#ed7d31;fontStyle=2;" edge="1" parent="7" source="11" target="14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 4d. Residual + -->
+        <mxCell id="17" value="+" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=16;fontStyle=1;fontColor=#9673a6;" vertex="1" parent="7">
+          <mxGeometry x="330" y="265" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Gated Fusion -> + -->
+        <mxCell id="18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#333333;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="7" source="14" target="17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Residual skip connection: Temporal bottom-left -> left -> down -> + left -->
+        <mxCell id="19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#9673a6;dashed=1;exitX=0;exitY=1;entryX=0;entryY=0.5;fontSize=11;fontColor=#9673a6;fontStyle=3;" edge="1" parent="7" source="10" target="17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="20" y="145" />
+              <mxPoint x="20" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 4e. LayerNorm -->
+        <mxCell id="20" value="LayerNorm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="7">
+          <mxGeometry x="290" y="305" width="110" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: + -> LayerNorm -->
+        <mxCell id="21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#333333;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="7" source="17" target="20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: container -> Flatten Head -->
+        <mxCell id="22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#333333;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="7" target="23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 5. Flatten Head -->
+        <mxCell id="23" value="Prediction Head&lt;div&gt;&lt;span style=&quot;font-size:9px;color:#666&quot;&gt;Flatten &amp;rarr; Linear &amp;rarr; Dropout&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="630" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Flatten Head -> De-norm -->
+        <mxCell id="24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#333333;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="23" target="25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 6. De-normalization -->
+        <mxCell id="25" value="De-normalization" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="350" y="710" width="200" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: De-norm -> Output -->
+        <mxCell id="26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#333333;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="25" target="27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 7. Output -->
+        <mxCell id="27" value="Output Forecast (T &amp;times; C)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="780" width="220" height="45" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
