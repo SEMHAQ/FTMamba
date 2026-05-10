@@ -139,8 +139,9 @@ ax_c.set_ylim(0.3, 1.2)
 # Shared legend below the figure
 handles = [plt.Rectangle((0, 0), 1, 1, facecolor=c, edgecolor='white',
                            linewidth=0.5) for c in colors]
-fig.legend(handles, models, loc='lower center', ncol=6, fontsize=7.5,
-           framealpha=0.9, edgecolor='#cccccc')
+fig.legend(handles, models, loc='upper center', ncol=6, fontsize=7.5,
+           framealpha=0.9, edgecolor='#cccccc',
+           bbox_to_anchor=(0.5, 0.02))
 
 fig.savefig('fig_main_results.pdf')
 fig.savefig('fig_main_results.png', dpi=300)
