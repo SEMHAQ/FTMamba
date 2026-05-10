@@ -63,7 +63,7 @@ plt.rcParams.update({
 })
 
 
-def plot_dataset(ax, data, title, show_ylabel=False, show_legend=False):
+def plot_dataset(ax, data, title, show_ylabel=False):
     n_h = len(horizons)
     n_m = len(models)
     x = np.arange(n_h)
@@ -72,14 +72,10 @@ def plot_dataset(ax, data, title, show_ylabel=False, show_legend=False):
 
     for i, model in enumerate(models):
         vals = data[model]
-        bars = ax.bar(x + offsets[i] * width, vals, width,
-                      label=model, color=colors[i], edgecolor='white',
-                      linewidth=0.5, zorder=3)
-        # Mark best per horizon
-        for j in range(n_h):
-            if vals[j] == min(data[m][j] for m in models):
-                bars[j].set_edgecolor('#000000')
-                bars[j].set_linewidth(1.2)
+        ax.bar(x + offsets[i] * width, vals, width,
+               label=model if show_ylabel else None,
+               color=colors[i], edgecolor='white',
+               linewidth=0.5, zorder=3)
 
     ax.set_xticks(x)
     ax.set_xticklabels([str(h) for h in horizons])
@@ -89,28 +85,25 @@ def plot_dataset(ax, data, title, show_ylabel=False, show_legend=False):
     ax.set_title(title, fontweight='bold', pad=6)
     ax.grid(axis='y', alpha=0.3, zorder=0)
     ax.set_axisbelow(True)
-    # Clip Transformer outliers for ETTh2
     if title == '(b) ETTh2':
         ax.set_ylim(0, 1.15)
-        # Mark clipped bars
-    if show_legend:
-        ax.legend(loc='upper right', ncol=2, framealpha=0.9, edgecolor='#cccccc',
-                  fontsize=6.5)
 
 
 # ── Figure 1: Main results (3 subplots) ──────────────────────────────
 fig, axes = plt.subplots(1, 3, figsize=(7.2, 2.8), sharey=False)
 
-plot_dataset(axes[0], etth1, '(a) ETTh1', show_ylabel=True, show_legend=True)
+plot_dataset(axes[0], etth1, '(a) ETTh1', show_ylabel=True)
 plot_dataset(axes[1], etth2, '(b) ETTh2')
 plot_dataset(axes[2], ettm1, '(c) ETTm1')
 
-# Add clipping indicator for ETTh2
-axes[1].annotate('Transformer:\nMSE > 1.9', xy=(0.98, 0.97),
-                 xycoords='axes fraction', ha='right', va='top',
-                 fontsize=6.5, color='#E34A33', fontstyle='italic')
+# Shared legend below the figure
+handles = [plt.Rectangle((0, 0), 1, 1, facecolor=c, edgecolor='white',
+                           linewidth=0.5) for c in colors]
+fig.legend(handles, models, loc='lower center', ncol=6, fontsize=7.5,
+           framealpha=0.9, edgecolor='#cccccc',
+           bbox_to_anchor=(0.5, -0.02))
 
-fig.tight_layout(w_pad=1.5)
+fig.tight_layout(w_pad=1.5, rect=[0, 0.04, 1, 1])
 fig.savefig('fig_main_results.pdf')
 fig.savefig('fig_main_results.png', dpi=300)
 print('Saved fig_main_results.pdf and .png')

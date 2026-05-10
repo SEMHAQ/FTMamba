@@ -76,7 +76,7 @@ ax.text(n_true + 2, ax.get_ylim()[1] - 0.02, 'Prediction start',
 
 ax.set_ylabel('Value (normalized)')
 ax.set_title('ETTh1 Forecast Comparison (horizon = 96)', fontweight='bold', pad=6)
-ax.legend(loc='upper right', ncol=2, framealpha=0.9, edgecolor='#cccccc',
+ax.legend(loc='upper left', ncol=3, framealpha=0.9, edgecolor='#cccccc',
           fontsize=7)
 ax.grid(axis='both', alpha=0.2)
 
@@ -93,8 +93,9 @@ ax2.fill_between(t[n_true:], 0, err_patchtst, alpha=0.2, color='#6BAED6',
 ax2.fill_between(t[n_true:], 0, err_dlinear, alpha=0.2, color='#FDBB84',
                  label='DLinear')
 ax2.set_xlabel('Time Step')
-ax2.set_ylabel('|Error|')
-ax2.legend(loc='upper right', ncol=3, framealpha=0.9, edgecolor='#cccccc')
+ax2.set_ylabel('Absolute Error')
+ax2.legend(loc='upper left', ncol=3, framealpha=0.9, edgecolor='#cccccc',
+           fontsize=7)
 ax2.grid(axis='both', alpha=0.2)
 ax2.set_xlim(0, n_total - 1)
 
