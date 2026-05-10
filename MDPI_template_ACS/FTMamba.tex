@@ -109,7 +109,7 @@ Given a multivariate time series input $\mathbf{X} = [x_1, x_2, \ldots, x_L] \in
 FTMamba is an encoder-only architecture with three components: patch embedding, stacked FTMamba layers, and a prediction head. Figure~\ref{fig:architecture} shows the overall architecture and the dual-branch structure inside each FTMamba layer.
 
 \begin{figure}[H]
-%\isPreprints{\centering}{} % Only used for preprints
+\centering
 \includegraphics[width=0.9\textwidth]{figures/architecture.pdf}
 \caption{Overall architecture of FTMamba. The input time series is first divided into patches through patch embedding. Each FTMamba layer consists of a temporal branch (Mamba block) and a frequency branch (learnable FFT filtering), which are adaptively combined through a gated fusion mechanism. The final prediction is produced through a flattening head.\label{fig:architecture}}
 \end{figure}
@@ -338,6 +338,7 @@ Transformer  & 0.5832 / 0.5536  & 0.5914 / 0.5637  & 1.0038 / 0.7817  & 1.1324 /
 \end{table}
 
 \begin{figure}[H]
+\centering
 \includegraphics[width=\textwidth]{figures/fig_main_results.pdf}
 \caption{MSE comparison across prediction horizons on (a)~ETTh1, (b)~ETTh2, and (c)~ETTm1. Lower is better. ETTh2 uses a broken $y$-axis to accommodate the large Transformer values.\label{fig:main_results}}
 \end{figure}
@@ -358,6 +359,7 @@ Transformer  & 0.5832 / 0.5536  & 0.5914 / 0.5637  & 1.0038 / 0.7817  & 1.1324 /
 \textbf{Computational Efficiency.} FTMamba has linear complexity $O(N \cdot D \cdot (E + \log N))$ vs.\ the quadratic $O(N^2 \cdot D)$ of Transformer methods. With $N=13$, $D=512$, $E=1024$, FTMamba requires roughly 3.2M FLOPs per forward pass vs.\ 8.5M for PatchTST. The advantage grows with sequence length (Figure~\ref{fig:efficiency}).
 
 \begin{figure}[H]
+\centering
 \includegraphics[width=0.55\textwidth]{figures/fig_efficiency.pdf}
 \caption{Computational cost (FLOPs) as a function of lookback window length $L$. FTMamba scales linearly, PatchTST/Transformer scale quadratically, and iTransformer is near-constant (attention across $C{=}7$ variates). $D{=}512$, $E{=}1024$, $P{=}16$, $S{=}8$.\label{fig:efficiency}}
 \end{figure}
@@ -366,6 +368,7 @@ Transformer  & 0.5832 / 0.5536  & 0.5914 / 0.5637  & 1.0038 / 0.7817  & 1.1324 /
 Figure~\ref{fig:prediction_curve} illustrates a qualitative forecast comparison on ETTh1. FTMamba tracks the ground-truth periodic structure more closely than PatchTST and DLinear, particularly in the later portion of the prediction window where cumulative drift is most visible.
 
 \begin{figure}[H]
+\centering
 \includegraphics[width=\textwidth]{figures/fig_prediction_curve.pdf}
 \caption{Forecast comparison on ETTh1 (horizon = 96). Top: historical values (solid), ground truth (dashed), and predictions from FTMamba, PatchTST, and DLinear. Bottom: absolute error over the prediction window.\label{fig:prediction_curve}}
 \end{figure}
@@ -389,6 +392,7 @@ w/o Gated Fusion (simple addition)     & 0.3979   & 0.4149   \\
 \end{table}
 
 \begin{figure}[H]
+\centering
 \includegraphics[width=0.55\textwidth]{figures/fig_ablation.pdf}
 \caption{Ablation study on ETTh1 with prediction horizon 96. MSE and MAE for the full model, the model without the frequency branch, and the model with simple addition instead of gated fusion.\label{fig:ablation}}
 \end{figure}
