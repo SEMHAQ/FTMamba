@@ -355,7 +355,21 @@ Transformer  & 0.5832 / 0.5536  & 0.5914 / 0.5637  & 1.0038 / 0.7817  & 1.1324 /
 
 \textbf{Dataset Characteristics.} FTMamba performs best on ETTh1 and ETTh2, which have clear periodic components. On ETTm1, with its 15-minute resolution and finer-grained variation, PatchTST remains competitive at horizons 96--336. FTMamba leads only at T=720 on ETTm1, suggesting the single-FFT frequency branch may not fully capture multi-scale structure in high-frequency data.
 
-\textbf{Computational Efficiency.} FTMamba has linear complexity $O(N \cdot D \cdot (E + \log N))$ vs.\ the quadratic $O(N^2 \cdot D)$ of Transformer methods. With $N=13$, $D=512$, $E=1024$, FTMamba requires roughly 3.2M FLOPs per forward pass vs.\ 8.5M for PatchTST. The advantage grows with sequence length.
+\textbf{Computational Efficiency.} FTMamba has linear complexity $O(N \cdot D \cdot (E + \log N))$ vs.\ the quadratic $O(N^2 \cdot D)$ of Transformer methods. With $N=13$, $D=512$, $E=1024$, FTMamba requires roughly 3.2M FLOPs per forward pass vs.\ 8.5M for PatchTST. The advantage grows with sequence length (Figure~\ref{fig:efficiency}).
+
+\begin{figure}[H]
+\includegraphics[width=0.55\textwidth]{figures/fig_efficiency.pdf}
+\caption{Computational cost (FLOPs) as a function of lookback window length $L$. FTMamba scales linearly, while PatchTST and Transformer scale quadratically. Model dimension $D=512$, expanded dimension $E=1024$, patch size $P=16$, stride $S=8$.\label{fig:efficiency}}
+\end{figure}
+\unskip
+
+Figure~\ref{fig:prediction_curve} illustrates a qualitative forecast comparison on ETTh1. FTMamba tracks the ground-truth periodic structure more closely than PatchTST and DLinear, particularly in the later portion of the prediction window where cumulative drift is most visible.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_prediction_curve.pdf}
+\caption{Forecast comparison on ETTh1 (horizon = 96). Top: historical values (solid), ground truth (dashed), and predictions from FTMamba, PatchTST, and DLinear. Bottom: absolute error over the prediction window.\label{fig:prediction_curve}}
+\end{figure}
+\unskip
 
 \subsection{Ablation Study}
 
