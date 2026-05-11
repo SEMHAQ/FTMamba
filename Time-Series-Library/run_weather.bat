@@ -1,4 +1,4 @@
-@echo off
+    @echo off
 REM ============================================
 REM Weather dataset experiments
 REM FTMamba + baselines, 4 horizons

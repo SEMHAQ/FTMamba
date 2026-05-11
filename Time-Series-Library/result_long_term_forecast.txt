@@ -409,3 +409,12 @@ mse:nan, mae:nan, dtw:Not calculated
 long_term_forecast_ETTm1_96_720_seed1234_FTMamba_ETTm1_ftM_sl96_ll48_pl720_dm512_nh8_el3_dl1_df64_expand2_dc4_fc1_ebtimeF_dtTrue_seed1234_0  
 mse:nan, mae:nan, dtw:Not calculated
 
+long_term_forecast_ETTm1_96_96_seed2021_FTMamba_ETTm1_ftM_sl96_ll48_pl96_dm512_nh8_el3_dl1_df64_expand2_dc4_fc1_ebtimeF_dtTrue_seed2021_0  
+mse:0.3414248526096344, mae:0.378805935382843, dtw:Not calculated
+
+long_term_forecast_ETTm1_96_192_seed2021_FTMamba_ETTm1_ftM_sl96_ll48_pl192_dm512_nh8_el3_dl1_df64_expand2_dc4_fc1_ebtimeF_dtTrue_seed2021_0  
+mse:0.37655872106552124, mae:0.3941022753715515, dtw:Not calculated
+
+long_term_forecast_ETTm1_96_336_seed2021_FTMamba_ETTm1_ftM_sl96_ll48_pl336_dm512_nh8_el3_dl1_df64_expand2_dc4_fc1_ebtimeF_dtTrue_seed2021_0  
+mse:0.40675830841064453, mae:0.41523781418800354, dtw:Not calculated
+

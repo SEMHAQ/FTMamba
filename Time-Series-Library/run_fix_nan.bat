@@ -16,7 +16,7 @@ set D_FF=64
 set D_CONV=4
 set EXPAND=2
 set DROPOUT=0.1
-set BATCH_SIZE=32
+set BATCH_SIZE=48
 set ITR=1
 
 echo ==========================================
