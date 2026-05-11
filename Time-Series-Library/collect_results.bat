@@ -18,13 +18,6 @@ findstr /C:"mse:" result_long_term_forecast.txt | findstr /C:"seed1234"
 
 echo.
 echo ==========================================
-echo  Collecting S-Mamba Results
-echo ==========================================
-echo.
-findstr /C:"mse:" result_long_term_forecast.txt | findstr /C:"S_Mamba"
-
-echo.
-echo ==========================================
 echo  Collecting Weather Results
 echo ==========================================
 echo.

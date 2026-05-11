@@ -46,8 +46,6 @@ for %%P in (96 192 336 720) do (
     echo [TimesNet] Weather pred_len=%%P
     python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id weather_96_%%P --model TimesNet --data custom --features M --seq_len %SEQ_LEN% --label_len %LABEL_LEN% --pred_len %%P --e_layers %E_LAYERS% --d_layers %D_LAYERS% --enc_in %ENC_IN% --dec_in %DEC_IN% --c_out %C_OUT% --d_model %D_MODEL% --d_ff %D_FF% --batch_size %BATCH_SIZE% --dropout %DROPOUT% --top_k 5 --des TimesNet --itr %ITR%
 
-    echo [S_Mamba] Weather pred_len=%%P
-    python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id weather_96_%%P --model S_Mamba --data custom --features M --seq_len %SEQ_LEN% --label_len %LABEL_LEN% --pred_len %%P --e_layers %E_LAYERS% --d_layers %D_LAYERS% --enc_in %ENC_IN% --dec_in %DEC_IN% --c_out %C_OUT% --d_model %D_MODEL% --d_ff %D_FF% --d_conv %D_CONV% --expand %EXPAND% --batch_size %BATCH_SIZE% --dropout %DROPOUT% --use_amp --des S_Mamba --itr %ITR%
 )
 
 echo.
