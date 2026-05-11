@@ -130,6 +130,21 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     loss = criterion(outputs, batch_y)
                     train_loss.append(loss.item())
 
+                # Skip NaN loss to prevent model corruption
+                if torch.isnan(loss) or torch.isinf(loss):
+                    model_optim.zero_grad()
+                    continue
+
+                # Gradient clipping to prevent NaN from gradient explosion
+                if self.args.use_amp:
+                    scaler.unscale_(model_optim)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                    scaler.step(model_optim)
+                    scaler.update()
+                else:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                    model_optim.step()
+
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
                     speed = (time.time() - time_now) / iter_count
@@ -140,11 +155,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
                 if self.args.use_amp:
                     scaler.scale(loss).backward()
-                    scaler.step(model_optim)
-                    scaler.update()
                 else:
                     loss.backward()
-                    model_optim.step()
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)

@@ -86,13 +86,16 @@ class MambaBlock(nn.Module):
         (b, l, d_in) = u.shape
         n = A.shape[1]
 
-        deltaA = torch.exp(einsum(delta, A, "b l d, d n -> b l d n"))
+        # Clamp to prevent overflow in exp()
+        deltaA = torch.exp(einsum(delta, A, "b l d, d n -> b l d n").clamp(max=10.0))
         deltaB_u = einsum(delta, B, u, "b l d, b l n, b l d -> b l d n")
 
         x = torch.zeros((b, d_in, n), device=deltaA.device)
         ys = []
         for i in range(l):
             x = deltaA[:, i] * x + deltaB_u[:, i]
+            # Clamp hidden state to prevent runaway values
+            x = x.clamp(min=-1e4, max=1e4)
             y = einsum(x, C[:, i, :], "b d n, b n -> b d")
             ys.append(y)
 
