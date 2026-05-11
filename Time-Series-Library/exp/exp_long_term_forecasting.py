@@ -135,13 +135,15 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     model_optim.zero_grad()
                     continue
 
-                # Gradient clipping to prevent NaN from gradient explosion
+                # Backward pass
                 if self.args.use_amp:
+                    scaler.scale(loss).backward()
                     scaler.unscale_(model_optim)
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
                     scaler.step(model_optim)
                     scaler.update()
                 else:
+                    loss.backward()
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
                     model_optim.step()
 
@@ -152,11 +154,6 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
                     iter_count = 0
                     time_now = time.time()
-
-                if self.args.use_amp:
-                    scaler.scale(loss).backward()
-                else:
-                    loss.backward()
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
