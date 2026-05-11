@@ -1,4 +1,9 @@
 # ===============================
+# Paper (MD draft, removed)
+# ===============================
+paper/
+
+# ===============================
 # Python
 # ===============================
 __pycache__/
@@ -124,4 +129,9 @@ ehthumbs.db
 *.snm
 *.vrb
 /Time-Series-Library/unifb/Lib/site-packages/
+# Compiled LaTeX output (exclude figure PDFs)
 *.pdf
+!MDPI_template_ACS/figures/*.pdf
+*.zip
+# Preview PNGs (paper uses PDF figures)
+MDPI_template_ACS/figures/*.png
