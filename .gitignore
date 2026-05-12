@@ -113,8 +113,11 @@ ehthumbs.db
 *.exe
 
 # ===============================
-# LaTeX (if generating paper here)
+# LaTeX submission
 # ===============================
+submission/
+*.zip
+# LaTeX build artifacts
 *.aux
 *.bbl
 *.blg
@@ -129,9 +132,10 @@ ehthumbs.db
 *.snm
 *.vrb
 /Time-Series-Library/unifb/Lib/site-packages/
-# Compiled LaTeX output (exclude figure PDFs)
+# Ignore all PDFs except paper figures
 *.pdf
 !MDPI_template_ACS/figures/*.pdf
-*.zip
-# Preview PNGs (paper uses PDF figures)
+# Ignore PNGs (paper uses PDF vector figures)
 MDPI_template_ACS/figures/*.png
+# LaTeX auto-generated artifacts
+*eps-converted-to.pdf

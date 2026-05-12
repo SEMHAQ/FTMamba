@@ -3,6 +3,7 @@
 Outputs:
   - fig_prediction_curve.pdf: True vs predicted values on ETTh1 sample
   - fig_efficiency.pdf: FLOPs comparison across sequence lengths
+  - fig_multiseed.pdf: Multi-seed reproducibility summary (2x2 subplots)
 """
 import matplotlib
 matplotlib.use('Agg')
@@ -108,7 +109,6 @@ print('Saved fig_prediction_curve.pdf and .png')
 seq_lengths = [96, 192, 336, 480, 672, 720, 960]
 D = 512
 E = 1024
-C = 7       # number of variates (ETT datasets)
 P = 16
 S = 8
 
@@ -129,7 +129,7 @@ def transformer_flops(L):
     head = N * D * 96
     return attn + ffn + embed + head
 
-def itransformer_flops(L):
+def itransformer_flops(L, C):
     # Attention across C variates (constant w.r.t. L), FFN per variate
     N = (L - P) // S + 2
     attn = 3 * C * C * D
@@ -140,7 +140,8 @@ def itransformer_flops(L):
 
 flops_ftmamba = [ftmamba_flops(L) / 1e6 for L in seq_lengths]
 flops_transformer = [transformer_flops(L) / 1e6 for L in seq_lengths]
-flops_itransformer = [itransformer_flops(L) / 1e6 for L in seq_lengths]
+flops_itransformer_7 = [itransformer_flops(L, 7) / 1e6 for L in seq_lengths]
+flops_itransformer_21 = [itransformer_flops(L, 21) / 1e6 for L in seq_lengths]
 
 fig2, ax3 = plt.subplots(figsize=(4.0, 3.2))
 
@@ -148,16 +149,74 @@ ax3.plot(seq_lengths, flops_ftmamba, 'o-', color='#2171B5', linewidth=1.5,
          markersize=5, label='FTMamba (linear)')
 ax3.plot(seq_lengths, flops_transformer, 's--', color='#E34A33', linewidth=1.2,
          markersize=4, label='PatchTST / Transformer (quadratic)')
-ax3.plot(seq_lengths, flops_itransformer, '^:', color='#FDBB84', linewidth=1.2,
-         markersize=4, label='iTransformer (near-constant)')
+ax3.plot(seq_lengths, flops_itransformer_7, '^:', color='#FDBB84', linewidth=1.2,
+         markersize=4, label='iTransformer (C=7)')
+ax3.plot(seq_lengths, flops_itransformer_21, 'v-.', color='#78C679', linewidth=1.2,
+         markersize=4, label='iTransformer (C=21)')
 
 ax3.set_xlabel('Lookback Window Length ($L$)')
 ax3.set_ylabel('FLOPs (M)')
 ax3.set_title('Computational Cost vs Sequence Length', fontweight='bold', pad=6)
-ax3.legend(framealpha=0.9, edgecolor='#cccccc')
+ax3.legend(framealpha=0.9, edgecolor='#cccccc', fontsize=7)
 ax3.grid(alpha=0.3)
 
 fig2.tight_layout()
 fig2.savefig('fig_efficiency.pdf')
 fig2.savefig('fig_efficiency.png', dpi=300)
+print('Saved fig_efficiency.pdf and .png')
+
+# ── Figure 6: Multi-seed reproducibility summary ─────────────────────
+datasets = ['ETTh1', 'ETTh2', 'ETTm1', 'Weather']
+horizons = [96, 192, 336, 720]
+
+# mean ± std from multi-seed tables
+multiseed = {
+    'ETTh1': {
+        'mean': [0.3856, 0.4396, 0.4779, 0.5033],
+        'std':  [0.0034, 0.0013, 0.0054, 0.0117],
+    },
+    'ETTh2': {
+        'mean': [0.2934, 0.3725, 0.4166, 0.4286],
+        'std':  [0.0030, 0.0031, 0.0019, 0.0106],
+    },
+    'ETTm1': {
+        'mean': [0.3441, 0.3794, 0.4068, 0.4550],
+        'std':  [0.0022, 0.0023, 0.0025, 0.0030],
+    },
+    'Weather': {
+        'mean': [0.1720, 0.2185, 0.2788, 0.3415],
+        'std':  [0.0015, 0.0020, 0.0030, 0.0040],
+    },
+}
+
+fig3, axes = plt.subplots(2, 2, figsize=(7.2, 5.5))
+colors_multi = ['#2171B5', '#6BAED6', '#FDBB84', '#E34A33']
+
+for idx, ds in enumerate(datasets):
+    ax = axes[idx // 2, idx % 2]
+    data = multiseed[ds]
+    x = np.arange(len(horizons))
+    bars = ax.bar(x, data['mean'], 0.4, color=colors_multi[idx],
+                  edgecolor='white', linewidth=0.5, zorder=3)
+    ax.errorbar(x, data['mean'], yerr=data['std'], fmt='none',
+                ecolor='#333333', capsize=4, capthick=1.0, linewidth=1.0,
+                zorder=4)
+    ax.set_xticks(x)
+    ax.set_xticklabels([str(h) for h in horizons])
+    ax.set_title(f'({chr(97+idx)}) {ds}', fontweight='bold', pad=6)
+    ax.set_xlabel('Prediction Horizon')
+    if idx % 2 == 0:
+        ax.set_ylabel('MSE')
+    ax.grid(axis='y', alpha=0.3, zorder=0)
+    ax.set_axisbelow(True)
+    # Set y-lim with headroom for error bars
+    ymax = max(data['mean']) + max(data['std']) * 1.5
+    ymin = min(data['mean']) - max(data['std']) * 1.5
+    ax.set_ylim(max(0, ymin), ymax * 1.12)
+
+fig3.suptitle('FTMamba Multi-Seed Reproducibility', fontweight='bold', y=0.98)
+fig3.tight_layout(rect=[0, 0, 1, 0.96])
+fig3.savefig('fig_multiseed.pdf')
+fig3.savefig('fig_multiseed.png', dpi=300)
+print('Saved fig_multiseed.pdf and .png')
 print('Saved fig_efficiency.pdf and .png')

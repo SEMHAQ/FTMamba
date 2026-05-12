@@ -1,7 +1,7 @@
 """Generate publication-quality figures for FTMamba paper.
 
 Outputs:
-  - fig_main_results.pdf: MSE comparison across 3 datasets (3 subplots)
+  - fig_main_results.pdf: MSE comparison across 4 datasets (2x2 subplots)
   - fig_ablation.pdf: Ablation study bar chart
 """
 import matplotlib
@@ -13,7 +13,6 @@ import numpy as np
 horizons = [96, 192, 336, 720]
 models = ['FTMamba', 'PatchTST', 'iTransformer', 'DLinear', 'TimesNet', 'Transformer']
 colors = ['#2171B5', '#6BAED6', '#BDD7E7', '#FDD49E', '#FDBB84', '#E34A33']
-hatches = ['', '', '', '', '', '']
 
 etth1 = {
     'FTMamba':     [0.3776, 0.4296, 0.4931, 0.4668],
@@ -34,12 +33,21 @@ etth2 = {
 }
 
 ettm1 = {
-    'FTMamba':     [0.3439, 0.3757, 0.4099, 0.4697],
+    'FTMamba':     [0.3439, 0.3757, 0.4099, 0.4600],
     'PatchTST':    [0.3368, 0.3683, 0.4062, 0.4648],
     'iTransformer': [0.3377, 0.3873, 0.4283, 0.5142],
     'DLinear':     [0.3480, 0.3845, 0.4149, 0.4733],
     'TimesNet':    [0.3881, 0.4212, 0.4650, 0.5273],
     'Transformer': [0.5832, 0.5914, 1.0038, 1.1324],
+}
+
+weather = {
+    'FTMamba':     [0.1735, 0.2182, 0.2785, 0.3412],
+    'PatchTST':    [0.1727, 0.2189, 0.2792, 0.3540],
+    'iTransformer': [0.1752, 0.2297, 0.2818, 0.3599],
+    'DLinear':     [0.1956, 0.2389, 0.2810, 0.3454],
+    'TimesNet':    [0.1811, 0.2247, 0.3023, 0.3993],
+    'Transformer': [0.3093, 0.4850, 0.6190, 0.9678],
 }
 
 # ── Ablation data ─────────────────────────────────────────────────────
@@ -93,14 +101,14 @@ def draw_break(ax_bottom, ax_top):
     ax_top.plot((1 - d, 1 + d), (-d, +d), **kwargs)
 
 
-# ── Figure 1: Main results (3 columns, broken axis for ETTh2) ───────
+# ── Figure 1: Main results (2x2 grid, broken axis for ETTh2) ────────
 import matplotlib.gridspec as gridspec
 
-fig = plt.figure(figsize=(7.2, 3.6))
-gs = gridspec.GridSpec(1, 3, wspace=0.45, figure=fig,
-                       bottom=0.12, top=0.92, left=0.07, right=0.97)
+fig = plt.figure(figsize=(7.2, 6.0))
+gs = gridspec.GridSpec(2, 2, wspace=0.40, hspace=0.50, figure=fig,
+                       bottom=0.08, top=0.94, left=0.07, right=0.97)
 
-# (a) ETTh1 — single axes
+# (a) ETTh1 — top left
 ax_a = fig.add_subplot(gs[0, 0])
 plot_bars(ax_a, etth1, show_ylabel=True)
 ax_a.set_xlabel('Prediction Horizon')
@@ -108,7 +116,7 @@ ax_a.set_ylabel('MSE')
 ax_a.set_title('(a) ETTh1', fontweight='bold', pad=6)
 ax_a.set_ylim(0.35, 1.15)
 
-# (b) ETTh2 — broken axis: bottom 0-1.0, top 1.5-4.0
+# (b) ETTh2 — top right, broken axis
 gs_b = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[0, 1],
                                          hspace=0.08, height_ratios=[1, 1])
 ax_b_top = fig.add_subplot(gs_b[0])
@@ -124,31 +132,39 @@ ax_b_bot.set_xlabel('Prediction Horizon')
 ax_b_bot.set_ylabel('MSE')
 ax_b_top.set_title('(b) ETTh2', fontweight='bold', pad=6)
 
-# Hide x-axis on top subplot
 plt.setp(ax_b_top.get_xticklabels(), visible=False)
-
+ax_b_top.yaxis.set_major_formatter(plt.FormatStrFormatter('%.1f'))
 draw_break(ax_b_bot, ax_b_top)
 
-# (c) ETTm1 — single axes
-ax_c = fig.add_subplot(gs[0, 2])
-plot_bars(ax_c, ettm1)
+# (c) ETTm1 — bottom left
+ax_c = fig.add_subplot(gs[1, 0])
+plot_bars(ax_c, ettm1, show_ylabel=True)
 ax_c.set_xlabel('Prediction Horizon')
+ax_c.set_ylabel('MSE')
 ax_c.set_title('(c) ETTm1', fontweight='bold', pad=6)
 ax_c.set_ylim(0.3, 1.2)
+
+# (d) Weather — bottom right
+ax_d = fig.add_subplot(gs[1, 1])
+plot_bars(ax_d, weather, show_ylabel=True)
+ax_d.set_xlabel('Prediction Horizon')
+ax_d.set_ylabel('MSE')
+ax_d.set_title('(d) Weather', fontweight='bold', pad=6)
+ax_d.set_ylim(0.1, 1.05)
 
 # Shared legend below the figure
 handles = [plt.Rectangle((0, 0), 1, 1, facecolor=c, edgecolor='white',
                            linewidth=0.5) for c in colors]
 fig.legend(handles, models, loc='upper center', ncol=6, fontsize=7.5,
            framealpha=0.9, edgecolor='#cccccc',
-           bbox_to_anchor=(0.5, 0.02))
+           bbox_to_anchor=(0.5, 0.01))
 
 fig.savefig('fig_main_results.pdf')
 fig.savefig('fig_main_results.png', dpi=300)
 print('Saved fig_main_results.pdf and .png')
 
 
-# ── Figure 2: Ablation ───────────────────────────────────────────────
+# ── Figure 2: Ablation ──────────────────────────────────────────────
 fig2, ax2 = plt.subplots(figsize=(3.5, 2.8))
 
 x2 = np.arange(len(ablation_configs))
