@@ -280,7 +280,7 @@ We compare FTMamba against five representative baselines spanning different arch
 
 FTMamba is implemented in PyTorch based on the Time-Series-Library framework~\cite{ref18}. We use the following hyperparameters: lookback window $L = 96$, label length = 48, patch length $P = 16$, stride $S = 8$, model dimension $D = 512$, feedforward dimension $d_{ff} = 64$, number of encoder layers $N_{layers} = 3$, convolution kernel size $d_{conv} = 4$, expansion factor = 2, and dropout rate = 0.1. We follow the standard protocol of using $L = 96$ as the lookback window, consistent with prior work~\cite{ref8,ref9}. The patch size $P = 16$ and stride $S = 8$ are chosen to balance local temporal resolution with sequence compression, following PatchTST~\cite{ref8}.
 
-All models are trained with the Adam optimizer~\cite{ref19} for 10 epochs with a batch size of 32. We use a learning rate of 1e-4 with cosine annealing scheduler. Mean Squared Error (MSE) is used as the training loss. All experiments run on a single NVIDIA RTX 3090 GPU with 24 GB memory. We use Automatic Mixed Precision (AMP) for training.
+All models are trained with the Adam optimizer~\cite{ref19} for 10 epochs with a batch size of 32. We use a learning rate of 1e-4 with cosine annealing scheduler. Mean Squared Error (MSE) is used as the training loss. All experiments run on a server equipped with an Intel Xeon Gold 6130 CPU and a single NVIDIA GeForce RTX 3090 GPU (24\,GB VRAM), running Windows 10 with Python 3.9.15, PyTorch 2.5.1, and CUDA 12.4. We use Automatic Mixed Precision (AMP) for training.
 
 \subsubsection{Evaluation Metrics}
 
