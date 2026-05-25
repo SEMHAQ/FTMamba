@@ -146,16 +146,35 @@ class FrequencyBranch(nn.Module):
 class GatedFusion(nn.Module):
     """
     Gated fusion mechanism to combine temporal and frequency features.
+    Supports multiple gating granularities.
     gate = sigmoid(W_g * [h_temp; h_freq])
     output = gate * h_temp + (1 - gate) * h_freq
     """
 
-    def __init__(self, d_model):
+    def __init__(self, d_model, gate_type='element'):
         super().__init__()
-        self.gate_proj = nn.Linear(d_model * 2, d_model)
+        self.gate_type = gate_type
+        if gate_type == 'element':
+            self.gate_proj = nn.Linear(d_model * 2, d_model)
+        elif gate_type == 'scalar':
+            self.gate_proj = nn.Linear(d_model * 2, 1)
+        elif gate_type == 'channel':
+            self.gate_proj = nn.Linear(d_model * 2, 1)
+        elif gate_type == 'patch':
+            self.gate_proj = nn.Linear(d_model * 2, 1)
+        else:
+            self.gate_proj = nn.Linear(d_model * 2, d_model)
 
     def forward(self, h_temp, h_freq):
-        gate = torch.sigmoid(self.gate_proj(torch.cat([h_temp, h_freq], dim=-1)))
+        # h_temp, h_freq: [B, N, D] or [B, C, N, D]
+        concat = torch.cat([h_temp, h_freq], dim=-1)
+        gate = torch.sigmoid(self.gate_proj(concat))
+        if self.gate_type == 'scalar':
+            gate = gate.mean(dim=(1, 2), keepdim=True)  # [B, 1, 1]
+        elif self.gate_type == 'channel':
+            gate = gate.mean(dim=2, keepdim=True)  # [B, C, 1] or similar
+        elif self.gate_type == 'patch':
+            gate = gate.mean(dim=-1, keepdim=True)  # [B, N, 1] or similar
         return gate * h_temp + (1 - gate) * h_freq
 
 
@@ -165,18 +184,38 @@ class FTMambaLayer(nn.Module):
     def __init__(self, d_model, d_state=16, d_conv=4, expand=2, seq_len=96, ablation_mode="full"):
         super().__init__()
         self.ablation_mode = ablation_mode
-        self.temporal_branch = MambaBlock(d_model, d_state, d_conv, expand)
-        if ablation_mode != "no_freq":
+
+        if ablation_mode != "freq_only":
+            self.temporal_branch = MambaBlock(d_model, d_state, d_conv, expand)
+
+        if ablation_mode not in ["no_freq", "pure_mamba", "freq_only"]:
             self.frequency_branch = FrequencyBranch(d_model, seq_len, fixed=(ablation_mode == "fixed_freq"))
+
         if ablation_mode == "full":
-            self.fusion = GatedFusion(d_model)
+            self.fusion = GatedFusion(d_model, gate_type='element')
+        elif ablation_mode == "scalar_gate":
+            self.fusion = GatedFusion(d_model, gate_type='scalar')
+        elif ablation_mode == "channel_gate":
+            self.fusion = GatedFusion(d_model, gate_type='channel')
+        elif ablation_mode == "patch_gate":
+            self.fusion = GatedFusion(d_model, gate_type='patch')
+
         self.norm = nn.LayerNorm(d_model)
 
     def forward(self, x):
         """
         x: [B * n_vars, patch_num, d_model]
         """
+        if self.ablation_mode == "pure_mamba":
+            h = self.temporal_branch(x)
+            return self.norm(h + x)
+
+        if self.ablation_mode == "freq_only":
+            h = self.frequency_branch(x)
+            return self.norm(h + x)
+
         h_temp = self.temporal_branch(x)
+
         if self.ablation_mode == "no_freq":
             h_fused = h_temp
         elif self.ablation_mode == "add_fusion":
@@ -185,6 +224,7 @@ class FTMambaLayer(nn.Module):
         else:
             h_freq = self.frequency_branch(x)
             h_fused = self.fusion(h_temp, h_freq)
+
         return self.norm(h_fused + x)  # residual connection
 
 
