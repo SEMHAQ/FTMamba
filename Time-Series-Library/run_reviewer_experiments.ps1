@@ -30,7 +30,7 @@ Write-Host "`n=== Phase 1: Additional Baselines ==="
 $datasets = @("ETTh1", "ETTh2", "ETTm1")
 $horizons = @(96, 192, 336, 720)
 $model_groups = @(
-    @{name="FEDformer"; layers=2; d_ff=2048; extra="--n_heads $N_HEADS --version Fourier --mode_select random --modes 64"},
+    @{name="FEDformer"; layers=2; d_ff=2048; extra="--n_heads $N_HEADS"},
     @{name="FreTS"; layers=2; d_ff=2048; extra="--channel_independence 1"},
     @{name="S_Mamba"; layers=3; d_ff=64; extra=""},
     @{name="TimeMachine"; layers=3; d_ff=2048; extra="--n_heads $N_HEADS"}
