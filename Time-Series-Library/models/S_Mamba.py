@@ -38,9 +38,10 @@ class Model(nn.Module):
             VariateMambaBlock(configs) for _ in range(configs.e_layers)
         ])
 
-        # Prediction head
+        # Prediction head: D -> C per time step, then project time L -> pred_len
         self.norm = nn.LayerNorm(configs.d_model)
-        self.out_layer = nn.Linear(configs.d_model, configs.pred_len, bias=False)
+        self.channel_proj = nn.Linear(configs.d_model, configs.enc_in, bias=False)
+        self.time_proj = nn.Linear(configs.seq_len, configs.pred_len, bias=False)
 
     def forecast(self, x_enc, x_mark_enc):
         # Instance normalization
@@ -60,9 +61,11 @@ class Model(nn.Module):
 
         x = self.norm(x)
 
-        # Prediction head: [B, L, D] -> [B, pred_len, C]
-        # Transpose to apply linear across time dimension
-        x_out = self.out_layer(x.transpose(1, 2)).transpose(1, 2)
+        # Prediction head: [B, L, D] -> [B, L, C] -> [B, C, L] -> [B, C, pred_len] -> [B, pred_len, C]
+        x = self.channel_proj(x)              # [B, L, D] -> [B, L, C]
+        x = x.permute(0, 2, 1)                # [B, C, L]
+        x_out = self.time_proj(x)             # [B, C, pred_len]
+        x_out = x_out.permute(0, 2, 1)        # [B, pred_len, C]
 
         # De-normalize
         x_out = x_out * std_enc + mean_enc
