@@ -40,17 +40,17 @@ Write-Host "`n=== Phase 1: New Baselines on ETT ==="
 $datasets = @("ETTh1", "ETTh2", "ETTm1")
 $horizons = @(96, 192, 336, 720)
 $model_groups = @(
-    @{name="FEDformer"; layers=2; d_ff=2048; extra="--n_heads $N_HEADS"},
-    @{name="FreTS"; layers=2; d_ff=2048; extra="--channel_independence 1"},
-    @{name="S_Mamba"; layers=3; d_ff=64; extra=""},
-    @{name="TimeMachine"; layers=3; d_ff=64; extra=""}
+    @{name="FEDformer"; layers=2; d_ff=2048; bs=64; extra="--n_heads $N_HEADS"},
+    @{name="FreTS"; layers=2; d_ff=2048; bs=64; extra="--channel_independence 1"},
+    @{name="S_Mamba"; layers=3; d_ff=64; bs=16; extra=""},
+    @{name="TimeMachine"; layers=3; d_ff=64; bs=64; extra=""}
 )
 
 foreach ($ds in $datasets) {
     foreach ($mg in $model_groups) {
         foreach ($pl in $horizons) {
-            $label = "$($mg.name) on $ds ($pl)"
-            $cmd = "python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path $ds.csv --model_id ${ds}_${pl}_${pl} --model $($mg.name) --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $($mg.layers) --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $($mg.d_ff) --dropout $DROPOUT --batch_size $BATCH_SIZE --des Review_Exp --itr $ITR $($mg.extra)"
+            $label = "$($mg.name) on $ds ($pl, bs=$($mg.bs))"
+            $cmd = "python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path $ds.csv --model_id ${ds}_${pl}_${pl} --model $($mg.name) --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $($mg.layers) --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $($mg.d_ff) --dropout $DROPOUT --batch_size $($mg.bs) --des Review_Exp --itr $ITR $($mg.extra)"
             Invoke-Exp -Cmd $cmd -Label $label
         }
     }
@@ -58,14 +58,15 @@ foreach ($ds in $datasets) {
 Write-Host "Phase 1 ETT done."
 
 # ============================================================
-# 1b. New baselines on Weather (bs=128, skip FTMamba)
+# 1b. New baselines on Weather (skip FTMamba; S_Mamba bs=8, others 128)
 # ============================================================
-Write-Host "`n=== Phase 1b: New Baselines on Weather (bs=128) ==="
+Write-Host "`n=== Phase 1b: New Baselines on Weather ==="
 foreach ($mg in $model_groups) {
     if ($mg.name -eq "FTMamba") { continue }
+    $bs = if ($mg.name -eq "S_Mamba") { 8 } else { 128 }
     foreach ($pl in $horizons) {
-        $label = "$($mg.name) on Weather ($pl, bs=128)"
-        $cmd = "python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model $($mg.name) --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $($mg.layers) --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $($mg.d_ff) --dropout $DROPOUT --batch_size 128 --des Review_Exp --itr $ITR $($mg.extra)"
+        $label = "$($mg.name) on Weather ($pl, bs=$bs)"
+        $cmd = "python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model $($mg.name) --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $($mg.layers) --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $($mg.d_ff) --dropout $DROPOUT --batch_size $bs --des Review_Exp --itr $ITR $($mg.extra)"
         Invoke-Exp -Cmd $cmd -Label $label
     }
 }
