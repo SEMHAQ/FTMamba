@@ -46,11 +46,12 @@ foreach ($ds in $datasets) {
     }
 }
 
-# Weather (21 variates, bs=16)
+# Weather (21 variates) — FTMamba skipped (OOM), others at bs=128
 foreach ($mg in $model_groups) {
+    if ($mg.name -eq "FTMamba") { continue }  # FTMamba Weather to be done later
     foreach ($pl in $horizons) {
-        $cmd = "python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model $($mg.name) --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $($mg.layers) --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $($mg.d_ff) --dropout $DROPOUT --batch_size 16 --des Review_Exp --itr $ITR $($mg.extra)"
-        Write-Host "$($mg.name) on Weather ($pl)"
+        $cmd = "python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model $($mg.name) --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $($mg.layers) --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $($mg.d_ff) --dropout $DROPOUT --batch_size 128 --des Review_Exp --itr $ITR $($mg.extra)"
+        Write-Host "$($mg.name) on Weather ($pl, bs=128)"
         Invoke-Expression $cmd
     }
 }
@@ -137,9 +138,10 @@ Write-Host "Phase 4 complete."
 # ============================================================
 # 5. Controlled batch size on Weather
 # ============================================================
-Write-Host "`n=== Phase 5: Controlled Batch Size (Weather, bs=16) ==="
+Write-Host "`n=== Phase 5: Controlled Batch Size (Weather, bs=16, skip FTMamba) ==="
 
 foreach ($m in $models) {
+    if ($m -eq "FTMamba") { continue }  # FTMamba Weather to be done later
     $extra = ""
     if ($m -in @("PatchTST","iTransformer","Transformer")) { $extra = "--n_heads $N_HEADS" }
     if ($m -eq "TimesNet") { $extra = "--top_k 5 --num_kernels 6 --n_heads $N_HEADS" }
