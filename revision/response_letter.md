@@ -1,0 +1,37 @@
+# Response Letter
+
+**Manuscript ID:** symmetry-4354055
+**Title:** Dual-Domain Temporal-Frequency Learning with Adaptive Gating for Long-Term Time Series Forecasting
+**Journal:** MDPI *Symmetry*
+
+---
+
+## Reviewer 1
+
+| # | Comment | Response | Revised Location |
+|---|---|---|---|
+| 1 | Missing frequency-domain (FEDformer, FreTS) and Mamba-based (S-Mamba, TimeMachine) baselines in empirical comparison | We agree these comparisons would strengthen the contribution. We have added FEDformer and FreTS as frequency-domain baselines and S-Mamba and TimeMachine as Mamba-based baselines to our experiments. Full results are reported in the revised Tables 1–4 and discussed in Section 4.2. | Tables 1–4, Section 4.2 |
+| 2 | Limited dataset diversity; three of four datasets come from the ETT family | We have added two additional datasets: **Electricity** (321 variates, 26,304 steps) and **Traffic** (862 variates, 17,544 steps) from the Time-Series-Library benchmark suite. These datasets span different domains (energy consumption and road occupancy) with larger variate counts, providing stronger evidence for generalizability. Results are reported in the new Table 5 and Section 4.5. | New Table 5, Section 4.5 |
+| 3 | Performance gains are small in some cases; soften claims of superiority | We agree and have revised the language throughout the paper. The Abstract now states the model "achieves the best MSE on 9 of 16 dataset–horizon pairs" without superlative framing. Section 4.2 (Analysis) now describes results as "competitive" rather than "superior" and explicitly notes cases where margins fall within seed variance. Multi-seed results are discussed alongside single-seed tables. | Abstract, Section 4.2, Section 5.5 |
+| 4 | Multi-seed comparison is unbalanced (FTMamba multi-seed, baselines single-seed) | We have added multi-seed evaluation for PatchTST across all four datasets (3 seeds: 2021, 42, 1234). Full results with mean ± std are reported in revised Tables 6–9. The asymmetric evaluation is now symmetric, allowing direct statistical comparison. | Revised Tables 6–9, Section 4.6 |
+| 5 | Ablation study too narrow (one dataset, one horizon); more variants needed | We have extended the ablation study in three ways: (1) ablation on all four datasets at horizon 96 (new Table 10); (2) horizon-stratified ablation on ETTh1 at T=96,192,336,720 (new Table 11); (3) additional architectural variants including pure Mamba, frequency-only, scalar gate, per-channel gate, and per-patch gate (new Table 12). Results confirm that the gating mechanism's importance generalizes across datasets and horizons, though the advantage varies. | New Tables 10–12, Section 4.3 |
+| 6 | Tensor shapes ambiguous in forward pass description | We have revised Section 3.3 and 3.5 to provide a complete tensor-shape walkthrough from input to output. Specifically, we now explicitly state: the Mamba block processes shape [B×C, N, D]; its output is [B, N, D] then broadcast-expanded to [B, C, N, D] for fusion with the frequency branch output at matching shape. | Section 3.3, Section 3.5 |
+| 7 | Additional evaluation metrics needed | We have added RMSE and sMAPE to the main results (revised Tables 1–4). Concerning statistical tests, the computational cost of Diebold–Mariano tests across all model pairs is substantial; we have added a discussion of this limitation in Section 5.7. | Revised Tables 1–4, Section 5.7 |
+| 8 | Empirical efficiency metrics needed (time, memory, FLOPs) | We have added empirical measurements of training time, inference throughput, and peak GPU memory usage for all models on ETTh1 (L=96, T=96) in the new Table 13. FTMamba achieves 2.1× faster inference than PatchTST while using comparable GPU memory. Parameter counts are also reported. | New Table 13, Section 4.4 |
+| 9 | Different batch sizes in Weather experiments raise fairness concerns | We have added controlled experiments on Weather with matched batch sizes (batch size 16 for all models). Results (new Table 14) confirm that the main-table conclusions are unchanged under matched batch sizes. We have also added a discussion of the batch size effect in Section 4.7. | New Table 14, Section 4.7 |
+| 10 | Visualize learned gate weights and frequency filters | We have added a new analysis in Section 5.6 showing: (a) distribution of gate values across the test set for datasets with varying periodicity (ETTh1 vs. ETTm1); (b) the frequency-domain filter magnitudes after training. Results show that the gate consistently assigns higher weight to the frequency branch for datasets with strong periodic components, supporting the claim that the gate adaptively balances the two streams based on input characteristics. | New Section 5.6, new Figure 8 |
+
+## Reviewer 2
+
+| # | Comment | Response | Revised Location |
+|---|---|---|---|
+| 1 | Add Zhang et al. (2026) citation on adaptive weight-aware balancing in the context of gated fusion or the importance of gating | We thank the reviewer for this suggestion. We have added the recommended reference (Zhang et al., "Horizontal Multi-Party Data Publishing Under Differential Privacy Via Weight-Aware Bidirectional Generative Adversarial Networks," *IEEE TKDE*, 2026) in Section 3.5 (Gated Fusion) and Section 5.2 (Gating Mechanism as the Key Component), where we discuss the broader context of adaptive weighting mechanisms. | Section 3.5, Section 5.2, References |
+
+## Reviewer 3
+
+| # | Comment | Response | Revised Location |
+|---|---|---|---|
+| 1 | Insufficient validation of gating mechanism claims: (a) missing pure Mamba baseline; (b) gating weight visualization; (c) comparison of different gating strategies | We address each sub-point: (a) We have added the "pure Mamba" baseline (removing both frequency branch and gate) in the extended ablation study (new Table 12, see also R1.5). (b) We have added gate weight visualization in new Section 5.6 (see R1.10). (c) We compare scalar, per-channel, and per-patch gating variants in new Table 12. Results show that per-element gating performs best overall, though per-channel gating offers a competitive trade-off. This analysis has been added to Section 4.3. | New Table 12, Section 4.3, new Section 5.6 |
+| 2 | Missing frequency-domain and Mamba baselines | We have added FEDformer, FreTS, S-Mamba, and TimeMachine to the experiments (see R1.1 for details). | Tables 1–4, Section 4.2 |
+| 3 | Related work lacks depth in GNN/RNN/CNN literature | We have restructured Section 2 (Related Work) to include three dedicated subsections: (2.1) Classical Architectures — covering GNN-based spatiotemporal modeling (including the recommended references DOI:10.1016/j.ymssp.2024.111841 and DOI:10.1109/JSEN.2024.3383665), RNN-based sequential modeling (DOI:10.1007/978-981-99-1645-0_42), and recent CNN advances (DOI:10.1016/j.neunet.2025.107139); (2.2) Mamba-based Time Series Models; (2.3) Frequency-domain Methods. This restructuring provides a complete landscape and better justifies the choice of Mamba and frequency analysis as the core approach. | Section 2 (restructured) |
+| 4 | Figure 4 prediction curves overlap; add zoom-in insets | We have updated Figure 4 with zoom-in panels highlighting the later portion of the prediction window (time steps 60–96), where differences between models are most visible. The revised figure clearly shows FTMamba's closer tracking of ground-truth periodicity in this region. | Revised Figure 4 |
