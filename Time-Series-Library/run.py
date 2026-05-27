@@ -2,6 +2,7 @@ import argparse
 import os
 import torch
 import torch.backends
+torch.backends.cudnn.enabled = False
 from utils.print_args import print_args
 import random
 import numpy as np
