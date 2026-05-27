@@ -64,22 +64,22 @@ for ds in "${DATASETS[@]}"; do
 
         # FEDformer
         label="FEDformer on $ds ($pl, bs=64)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model FEDformer --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers 2 --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 64 --des Review_Exp --itr $ITR --n_heads $N_HEADS"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model FEDformer --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers 2 --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 64 --des Review_Exp --itr $ITR --n_heads $N_HEADS"
         invoke_exp "$cmd" "$label"
 
         # FreTS
         label="FreTS on $ds ($pl, bs=64)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model FreTS --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers 2 --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 64 --des Review_Exp --itr $ITR --channel_independence 1"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model FreTS --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers 2 --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 64 --des Review_Exp --itr $ITR --channel_independence 1"
         invoke_exp "$cmd" "$label"
 
         # S_Mamba (bs=16 to avoid OOM)
         label="S_Mamba on $ds ($pl, bs=16)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model S_Mamba --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $D_FF --dropout $DROPOUT --batch_size 16 --des Review_Exp --itr $ITR"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model S_Mamba --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $D_FF --dropout $DROPOUT --batch_size 16 --des Review_Exp --itr $ITR"
         invoke_exp "$cmd" "$label"
 
         # TimeMachine
         label="TimeMachine on $ds ($pl, bs=64)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model TimeMachine --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $D_FF --dropout $DROPOUT --batch_size 64 --des Review_Exp --itr $ITR"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model TimeMachine --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $D_FF --dropout $DROPOUT --batch_size 64 --des Review_Exp --itr $ITR"
         invoke_exp "$cmd" "$label"
 
     done
@@ -95,19 +95,19 @@ echo "=== Phase 1b: New Baselines on Weather ==="
 for pl in "${HORIZONS[@]}"; do
 
     label="FEDformer on Weather ($pl, bs=128)"
-    cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model FEDformer --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers 2 --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 128 --des Review_Exp --itr $ITR --n_heads $N_HEADS"
+    cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model FEDformer --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers 2 --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 128 --des Review_Exp --itr $ITR --n_heads $N_HEADS"
     invoke_exp "$cmd" "$label"
 
     label="FreTS on Weather ($pl, bs=128)"
-    cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model FreTS --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers 2 --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 128 --des Review_Exp --itr $ITR --channel_independence 1"
+    cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model FreTS --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers 2 --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 128 --des Review_Exp --itr $ITR --channel_independence 1"
     invoke_exp "$cmd" "$label"
 
     label="S_Mamba on Weather ($pl, bs=8)"
-    cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model S_Mamba --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --dropout $DROPOUT --batch_size 8 --des Review_Exp --itr $ITR"
+    cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model S_Mamba --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --dropout $DROPOUT --batch_size 8 --des Review_Exp --itr $ITR"
     invoke_exp "$cmd" "$label"
 
     label="TimeMachine on Weather ($pl, bs=128)"
-    cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model TimeMachine --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --dropout $DROPOUT --batch_size 128 --des Review_Exp --itr $ITR"
+    cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model TimeMachine --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --dropout $DROPOUT --batch_size 128 --des Review_Exp --itr $ITR"
     invoke_exp "$cmd" "$label"
 
 done
@@ -131,7 +131,7 @@ for m in "${BASE_MODELS[@]}"; do
     fi
     for pl in "${HORIZONS[@]}"; do
         label="$m on Electricity ($pl)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/electricity/ --data_path electricity.csv --model_id Electricity_${pl}_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 321 --dec_in 321 --c_out 321 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 16 --des Dataset_Exp --itr $ITR $EXTRA"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/electricity/ --data_path electricity.csv --model_id Electricity_${pl}_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 321 --dec_in 321 --c_out 321 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 16 --des Dataset_Exp --itr $ITR $EXTRA"
         invoke_exp "$cmd" "$label"
     done
 done
@@ -147,7 +147,7 @@ for m in "${BASE_MODELS[@]}"; do
     fi
     for pl in "${HORIZONS[@]}"; do
         label="$m on Traffic ($pl)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/traffic/ --data_path traffic.csv --model_id Traffic_${pl}_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 862 --dec_in 862 --c_out 862 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 8 --des Dataset_Exp --itr $ITR $EXTRA"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/traffic/ --data_path traffic.csv --model_id Traffic_${pl}_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 862 --dec_in 862 --c_out 862 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 8 --des Dataset_Exp --itr $ITR $EXTRA"
         invoke_exp "$cmd" "$label"
     done
 done
@@ -166,7 +166,7 @@ echo "--- Multi-dataset (T=96) ---"
 for ds in "${DATASETS[@]}"; do
     for mode in "${ABLATION_MODES[@]}"; do
         label="$mode on $ds (T=96)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${mode}_96 --model FTMamba --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len 96 --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size $BATCH_SIZE --ablation_mode $mode --des Ablation_Exp --itr 1"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${mode}_96 --model FTMamba --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len 96 --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size $BATCH_SIZE --ablation_mode $mode --des Ablation_Exp --itr 1"
         invoke_exp "$cmd" "$label"
     done
 done
@@ -175,7 +175,7 @@ done
 echo "--- Weather (T=96, bs=8) ---"
 for mode in "${ABLATION_MODES[@]}"; do
     label="$mode on Weather (T=96)"
-    cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${mode}_96 --model FTMamba --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len 96 --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 8 --ablation_mode $mode --des Ablation_Exp --itr 1"
+    cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${mode}_96 --model FTMamba --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len 96 --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 8 --ablation_mode $mode --des Ablation_Exp --itr 1"
     invoke_exp "$cmd" "$label"
 done
 
@@ -184,7 +184,7 @@ echo "--- Horizon-stratified (ETTh1) ---"
 for pl in "${HORIZONS[@]}"; do
     for mode in "${HORIZON_MODES[@]}"; do
         label="$mode on ETTh1 (T=$pl)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/ETT-small/ --data_path ETTh1.csv --model_id ETTh1_${mode}_${pl} --model FTMamba --data ETTh1 --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size $BATCH_SIZE --ablation_mode $mode --des Ablation_Exp --itr 1"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/ETT-small/ --data_path ETTh1.csv --model_id ETTh1_${mode}_${pl} --model FTMamba --data ETTh1 --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size $BATCH_SIZE --ablation_mode $mode --des Ablation_Exp --itr 1"
         invoke_exp "$cmd" "$label"
     done
 done
@@ -199,14 +199,14 @@ echo "=== Phase 4: Multi-seed PatchTST (itr=3) ==="
 for ds in "${DATASETS[@]}"; do
     for pl in "${HORIZONS[@]}"; do
         label="PatchTST on $ds ($pl, itr=3)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model PatchTST --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size $BATCH_SIZE --des Multiseed_Exp --itr 3 --n_heads $N_HEADS"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/$ds/ --data_path ${ds}.csv --model_id ${ds}_${pl}_${pl} --model PatchTST --data $ds --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 7 --dec_in 7 --c_out 7 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size $BATCH_SIZE --des Multiseed_Exp --itr 3 --n_heads $N_HEADS"
         invoke_exp "$cmd" "$label"
     done
 done
 
 for pl in "${HORIZONS[@]}"; do
     label="PatchTST on Weather ($pl, itr=3)"
-    cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model PatchTST --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 16 --des Multiseed_Exp --itr 3 --n_heads $N_HEADS"
+    cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${pl}_${pl} --model PatchTST --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff 2048 --dropout $DROPOUT --batch_size 16 --des Multiseed_Exp --itr 3 --n_heads $N_HEADS"
     invoke_exp "$cmd" "$label"
 done
 echo "Phase 4 done."
@@ -231,7 +231,7 @@ for m in "${PHASE5_MODELS[@]}"; do
     fi
     for pl in "${HORIZONS[@]}"; do
         label="$m on Weather ($pl, bs=16)"
-        cmd="python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_bs16_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 16 --des WeatherBS_Exp --itr $ITR $EXTRA"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_bs16_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 16 --des WeatherBS_Exp --itr $ITR $EXTRA"
         invoke_exp "$cmd" "$label"
     done
 done
