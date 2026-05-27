@@ -11,12 +11,16 @@ $N_HEADS = 8; $ITR = 1; $BATCH_SIZE = 64
 
 function Invoke-Exp {
     param($Cmd, $Label)
-    # Build filter from model name + pred_len in label
-    $plmatch = [regex]::Match($Label, '\((\d+)(?:,|\))')
+    # Parse label to extract model, dataset, pred_len for skip check
+    # Label format: "ModelName on DatasetName (pred_len)" or "mode on DatasetName (T=pred_len)"
+    $parts = $Label -split ' '
+    $model = $parts[0]
+    $dataset = if ($parts.Count -ge 3) { $parts[2] -replace '[()]','' } else { "" }
+    $plmatch = [regex]::Match($Label, '(\d+)(?:,|\b|\))')
     if (-not $plmatch.Success) { $plmatch = [regex]::Match($Label, 'T[= ]*(\d+)') }
     $pl = if ($plmatch.Success) { $plmatch.Groups[1].Value } else { "??" }
-    $model = ($Label -split ' ')[0]
-    $filter = "long_term_forecast_*_${model}_*_sl${SEQ_LEN}_*_pl${pl}_*_Exp_*"
+    $filter = "long_term_forecast_${dataset}_*_${model}_*_sl${SEQ_LEN}_*_pl${pl}_*_Exp_*"
+    Write-Debug "Filter: $filter"
     if (Test-Path results) {
         $existing = Get-ChildItem results -Directory -Filter $filter -ErrorAction SilentlyContinue
         if ($existing -and $existing.Count -gt 0) {
@@ -76,7 +80,7 @@ Write-Host "Phase 1b Weather done."
 # 2. Additional datasets (Electricity, Traffic)
 # ============================================================
 Write-Host "`n=== Phase 2: Electricity + Traffic ==="
-$base_models = @("FTMamba", "PatchTST", "iTransformer", "MambaSimple", "DLinear", "TimesNet", "Transformer")
+$base_models = @("FTMamba", "PatchTST", "iTransformer", "Mamba", "DLinear", "TimesNet", "Transformer")
 
 # Electricity (321 variates, bs=16)
 Write-Host "--- Electricity ---"
@@ -118,11 +122,11 @@ foreach ($ds in $datasets) {
     }
 }
 
-# 3b. Weather ablation (T=96, bs=16)
-Write-Host "--- Weather (T=96) ---"
+# 3b. Weather ablation (T=96, bs=8 — FTMamba OOMs at higher bs)
+Write-Host "--- Weather (T=96, bs=8) ---"
 foreach ($mode in $ablation_modes) {
     $label = "$mode on Weather (T=96)"
-    $cmd = "python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${mode}_96 --model FTMamba --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len 96 --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 16 --ablation_mode $mode --des Ablation_Exp --itr 1"
+    $cmd = "python -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/weather/ --data_path weather.csv --model_id Weather_${mode}_96 --model FTMamba --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len 96 --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 21 --dec_in 21 --c_out 21 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 8 --ablation_mode $mode --des Ablation_Exp --itr 1"
         Invoke-Exp -Cmd $cmd -Label $label
 }
 
@@ -161,7 +165,7 @@ Write-Host "Phase 4 done."
 # ============================================================
 Write-Host "`n=== Phase 5: Controlled Batch Size (Weather, bs=16, no FTMamba) ==="
 
-$phase5_models = @("FTMamba", "PatchTST", "iTransformer", "MambaSimple", "DLinear", "TimesNet", "Transformer")
+$phase5_models = @("FTMamba", "PatchTST", "iTransformer", "Mamba", "DLinear", "TimesNet", "Transformer")
 foreach ($m in $phase5_models) {
     if ($m -eq "FTMamba") { Write-Host "  [SKIP] FTMamba on Weather — OOM"; continue }
     $extra = ""; if ($m -in @("PatchTST","iTransformer","Transformer")) { $extra = "--n_heads $N_HEADS" } elseif ($m -eq "TimesNet") { $extra = "--top_k 5 --num_kernels 6 --n_heads $N_HEADS" }
