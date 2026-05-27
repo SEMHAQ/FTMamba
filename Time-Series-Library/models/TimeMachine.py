@@ -12,6 +12,12 @@ import torch.nn.functional as F
 import math
 from einops import rearrange, repeat, einsum
 
+try:
+    from mamba_ssm import Mamba as MambaSSM
+    HAS_MAMBA_SSM = True
+except ImportError:
+    HAS_MAMBA_SSM = False
+
 
 class MambaBlock(nn.Module):
     """Pure PyTorch Mamba block (from FTMamba implementation)."""

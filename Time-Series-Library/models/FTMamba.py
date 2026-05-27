@@ -16,6 +16,13 @@ import math
 from einops import rearrange, repeat, einsum
 from layers.Embed import PatchEmbedding
 
+# Try to use mamba_ssm CUDA kernel (10-50x faster than pure PyTorch)
+try:
+    from mamba_ssm import Mamba as MambaSSM
+    HAS_MAMBA_SSM = True
+except ImportError:
+    HAS_MAMBA_SSM = False
+
 
 class FlattenHead(nn.Module):
     def __init__(self, n_vars, nf, target_window, head_dropout=0):
@@ -33,31 +40,39 @@ class FlattenHead(nn.Module):
 
 
 class MambaBlock(nn.Module):
-    """Pure PyTorch Mamba block (no mamba_ssm dependency)."""
+    """Mamba block: uses mamba_ssm CUDA kernel if available, otherwise pure PyTorch."""
 
     def __init__(self, d_model, d_state=16, d_conv=4, expand=2):
         super().__init__()
-        self.d_inner = d_model * expand
-        self.dt_rank = math.ceil(d_model / 16)
+        self.use_cuda_kernel = HAS_MAMBA_SSM
 
-        self.in_proj = nn.Linear(d_model, self.d_inner * 2, bias=False)
-        self.conv1d = nn.Conv1d(
-            in_channels=self.d_inner,
-            out_channels=self.d_inner,
-            bias=True,
-            kernel_size=d_conv,
-            padding=d_conv - 1,
-            groups=self.d_inner,
-        )
-        self.x_proj = nn.Linear(self.d_inner, self.dt_rank + d_state * 2, bias=False)
-        self.dt_proj = nn.Linear(self.dt_rank, self.d_inner, bias=True)
+        if self.use_cuda_kernel:
+            self.mamba = MambaSSM(d_model=d_model, d_state=d_state, d_conv=d_conv, expand=expand)
+        else:
+            self.d_inner = d_model * expand
+            self.dt_rank = math.ceil(d_model / 16)
 
-        A = repeat(torch.arange(1, d_state + 1), "n -> d n", d=self.d_inner).float()
-        self.A_log = nn.Parameter(torch.log(A))
-        self.D = nn.Parameter(torch.ones(self.d_inner))
-        self.out_proj = nn.Linear(self.d_inner, d_model, bias=False)
+            self.in_proj = nn.Linear(d_model, self.d_inner * 2, bias=False)
+            self.conv1d = nn.Conv1d(
+                in_channels=self.d_inner,
+                out_channels=self.d_inner,
+                bias=True,
+                kernel_size=d_conv,
+                padding=d_conv - 1,
+                groups=self.d_inner,
+            )
+            self.x_proj = nn.Linear(self.d_inner, self.dt_rank + d_state * 2, bias=False)
+            self.dt_proj = nn.Linear(self.dt_rank, self.d_inner, bias=True)
+
+            A = repeat(torch.arange(1, d_state + 1), "n -> d n", d=self.d_inner).float()
+            self.A_log = nn.Parameter(torch.log(A))
+            self.D = nn.Parameter(torch.ones(self.d_inner))
+            self.out_proj = nn.Linear(self.d_inner, d_model, bias=False)
 
     def forward(self, x):
+        if self.use_cuda_kernel:
+            return self.mamba(x)
+
         (b, l, d) = x.shape
         x_and_res = self.in_proj(x)
         x, res = x_and_res.split(split_size=[self.d_inner, self.d_inner], dim=-1)

@@ -14,6 +14,12 @@ from einops import rearrange
 
 from layers.Embed import DataEmbedding
 
+try:
+    from mamba_ssm import Mamba as MambaSSM
+    HAS_MAMBA_SSM = True
+except ImportError:
+    HAS_MAMBA_SSM = False
+
 
 class Model(nn.Module):
     def __init__(self, configs):
@@ -83,40 +89,45 @@ class VariateMambaBlock(nn.Module):
     def __init__(self, configs):
         super(VariateMambaBlock, self).__init__()
         d_model = configs.d_model
-        d_inner = d_model * configs.expand
-        dt_rank = math.ceil(d_model / 16)
-        d_conv = configs.d_conv
         d_state = configs.d_ff
-
         self.norm = nn.LayerNorm(d_model)
-        self.d_inner = d_inner
-        self.dt_rank = dt_rank
 
-        # Mamba components
-        self.in_proj = nn.Linear(d_model, d_inner * 2, bias=False)
-        self.conv1d = nn.Conv1d(
-            in_channels=d_inner, out_channels=d_inner,
-            bias=True, kernel_size=d_conv, padding=d_conv - 1,
-            groups=d_inner,
-        )
-        self.x_proj = nn.Linear(d_inner, dt_rank + d_state * 2, bias=False)
-        self.dt_proj = nn.Linear(dt_rank, d_inner, bias=True)
+        if HAS_MAMBA_SSM:
+            self.use_cuda_kernel = True
+            self.mamba = MambaSSM(
+                d_model=d_model, d_state=d_state,
+                d_conv=configs.d_conv, expand=configs.expand,
+            )
+        else:
+            self.use_cuda_kernel = False
+            d_inner = d_model * configs.expand
+            dt_rank = math.ceil(d_model / 16)
 
-        A = torch.arange(1, d_state + 1, dtype=torch.float32)
-        A = A.unsqueeze(0).expand(d_inner, -1).clone()
-        self.A_log = nn.Parameter(torch.log(A))
-        self.D = nn.Parameter(torch.ones(d_inner))
+            self.d_inner = d_inner
+            self.dt_rank = dt_rank
 
-        self.out_proj = nn.Linear(d_inner, d_model, bias=False)
+            self.in_proj = nn.Linear(d_model, d_inner * 2, bias=False)
+            self.conv1d = nn.Conv1d(
+                in_channels=d_inner, out_channels=d_inner,
+                bias=True, kernel_size=configs.d_conv, padding=configs.d_conv - 1,
+                groups=d_inner,
+            )
+            self.x_proj = nn.Linear(d_inner, dt_rank + d_state * 2, bias=False)
+            self.dt_proj = nn.Linear(dt_rank, d_inner, bias=True)
+
+            A = torch.arange(1, d_state + 1, dtype=torch.float32)
+            A = A.unsqueeze(0).expand(d_inner, -1).clone()
+            self.A_log = nn.Parameter(torch.log(A))
+            self.D = nn.Parameter(torch.ones(d_inner))
+
+            self.out_proj = nn.Linear(d_inner, d_model, bias=False)
 
     def forward(self, x):
-        """
-        x: [B, L, D]
-        Apply Mamba across the variate-like dimension.
-        Here we treat the sequence dimension as the scan dimension.
-        """
         residual = x
         x = self.norm(x)
+
+        if self.use_cuda_kernel:
+            return self.mamba(x) + residual
 
         (b, l, d) = x.shape
 
