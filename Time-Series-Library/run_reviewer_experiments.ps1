@@ -11,19 +11,18 @@ $N_HEADS = 8; $ITR = 1; $BATCH_SIZE = 64
 
 function Invoke-Exp {
     param($Cmd, $Label)
-    # Parse label to extract model, dataset, pred_len for skip check
-    # Label format: "ModelName on DatasetName (pred_len)" or "mode on DatasetName (T=pred_len)"
+    # Parse label: "ModelName on DatasetName (pred_len)" or "mode on DatasetName (T=pred_len)"
     $parts = $Label -split ' '
     $model = $parts[0]
     $dataset = if ($parts.Count -ge 3) { $parts[2] -replace '[()]','' } else { "" }
-    $plmatch = [regex]::Match($Label, '(\d+)(?:,|\b|\))')
+    $plmatch = [regex]::Match($Label, '\((\d+)')
     if (-not $plmatch.Success) { $plmatch = [regex]::Match($Label, 'T[= ]*(\d+)') }
     $pl = if ($plmatch.Success) { $plmatch.Groups[1].Value } else { "??" }
-    $filter = "long_term_forecast_${dataset}_*_${model}_*_sl${SEQ_LEN}_*_pl${pl}_*_Exp_*"
-    Write-Debug "Filter: $filter"
-    if (Test-Path results) {
-        $existing = Get-ChildItem results -Directory -Filter $filter -ErrorAction SilentlyContinue
-        if ($existing -and $existing.Count -gt 0) {
+    # Check result_long_term_forecast.txt for existing results
+    $resultFile = "result_long_term_forecast.txt"
+    if (Test-Path $resultFile) {
+        $match = Select-String -Path $resultFile -Pattern "forecast_${dataset}_.*_${model}_.*_pl${pl}_.*_Exp_" -Quiet
+        if ($match) {
             Write-Host "  [SKIP] $Label"
             return
         }
