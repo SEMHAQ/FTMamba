@@ -144,13 +144,17 @@ class FrequencyBranch(nn.Module):
         # Apply FFT along the sequence (patch) dimension
         x_fft = torch.fft.rfft(x, dim=1)  # [B*nv, patch_num//2+1, d_model]
 
-        # Apply learnable frequency filter
-        freq_filter = torch.complex(self.freq_filter_real, self.freq_filter_imag)
+        # Apply learnable frequency filter (clamp to prevent extreme values)
+        freq_filter = torch.complex(
+            self.freq_filter_real.clamp(-5, 5),
+            self.freq_filter_imag.clamp(-5, 5)
+        )
         # Broadcast filter across d_model dimension
         x_fft = x_fft * freq_filter.transpose(1, 2)  # broadcast over d_model
 
         # iFFT back to time domain
         x_freq = torch.fft.irfft(x_fft, n=x.shape[1], dim=1)  # [B*nv, patch_num, d_model]
+        x_freq = torch.nan_to_num(x_freq, nan=0.0, posinf=1e4, neginf=-1e4)
 
         # Projection and norm
         x_freq = self.proj(x_freq)
@@ -300,7 +304,7 @@ class Model(nn.Module):
         means = x_enc.mean(1, keepdim=True).detach()
         x_enc = x_enc - means
         stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
-        x_enc /= stdev
+        x_enc = x_enc / (stdev + 1e-8)
 
         # Patch embedding: [B, seq_len, n_vars] -> [B*n_vars, patch_num, d_model]
         x_enc = x_enc.permute(0, 2, 1)
@@ -321,6 +325,8 @@ class Model(nn.Module):
         # De-normalization
         dec_out = dec_out * stdev[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1)
         dec_out = dec_out + means[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1)
+        # Final NaN guard
+        dec_out = torch.nan_to_num(dec_out, nan=0.0, posinf=1e6, neginf=-1e6)
         return dec_out
 
     def imputation(self, x_enc, x_mark_enc, x_dec, x_mark_dec, mask):

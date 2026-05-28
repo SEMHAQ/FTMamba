@@ -34,6 +34,16 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
         return model_optim
 
+    def _load_best_model(self, path):
+        """Load best model checkpoint, or re-initialize if no checkpoint exists."""
+        best_path = os.path.join(path, 'checkpoint.pth')
+        if os.path.exists(best_path):
+            self.model.load_state_dict(torch.load(best_path, map_location=self.device))
+            print(f"  Reloaded model from {best_path}")
+        else:
+            print("  [WARN] No checkpoint found, re-initializing model...")
+            self.model = self._build_model().to(self.device)
+
     def _select_criterion(self):
         criterion = nn.MSELoss()
         return criterion
@@ -119,6 +129,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         f_dim = -1 if self.args.features == 'MS' else 0
                         outputs = outputs[:, -self.args.pred_len:, f_dim:]
                         batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
+
+                        # Replace NaN/Inf in output to prevent training collapse
+                        if torch.isnan(outputs).any() or torch.isinf(outputs).any():
+                            model_optim.zero_grad()
+                            continue
+
                         loss = criterion(outputs, batch_y)
                         train_loss.append(loss.item())
                 else:
@@ -127,6 +143,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     f_dim = -1 if self.args.features == 'MS' else 0
                     outputs = outputs[:, -self.args.pred_len:, f_dim:]
                     batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
+
+                    # Replace NaN/Inf in output to prevent training collapse
+                    if torch.isnan(outputs).any() or torch.isinf(outputs).any():
+                        model_optim.zero_grad()
+                        continue
+
                     loss = criterion(outputs, batch_y)
                     train_loss.append(loss.item())
 
@@ -139,13 +161,24 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 if self.args.use_amp:
                     scaler.scale(loss).backward()
                     scaler.unscale_(model_optim)
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=0.5)
                     scaler.step(model_optim)
                     scaler.update()
                 else:
                     loss.backward()
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=0.5)
                     model_optim.step()
+
+                # Check for NaN in model parameters and reload if found
+                has_nan = False
+                for p in self.model.parameters():
+                    if torch.isnan(p).any():
+                        has_nan = True
+                        break
+                if has_nan:
+                    print(f"  [WARN] NaN detected in model parameters at iter {i}, reloading checkpoint...")
+                    self._load_best_model(path)
+                    break
 
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
