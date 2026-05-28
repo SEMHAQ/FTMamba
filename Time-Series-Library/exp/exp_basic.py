@@ -22,6 +22,11 @@ class Exp_Basic(object):
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)
 
+        # Optional torch.compile JIT optimization
+        if getattr(args, 'compile', False) and hasattr(torch, 'compile'):
+            print('Applying torch.compile() JIT optimization...')
+            self.model = torch.compile(self.model)
+
     def _scan_models_directory(self):
         """
         Automatically scan all .py files in the models folder

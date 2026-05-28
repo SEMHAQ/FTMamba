@@ -119,6 +119,8 @@ echo "Phase 1b Weather done."
 echo ""
 echo "=== Phase 2: Electricity + Traffic ==="
 BASE_MODELS=("FTMamba" "PatchTST" "iTransformer" "Mamba" "DLinear" "TimesNet" "Transformer")
+# Speed flags for large datasets (Electricity/Traffic): AMP + fewer epochs
+LARGE_DS_FLAGS="--use_amp --train_epochs 5"
 
 # Electricity (321 variates, bs=16)
 echo "--- Electricity ---"
@@ -131,7 +133,7 @@ for m in "${BASE_MODELS[@]}"; do
     fi
     for pl in "${HORIZONS[@]}"; do
         label="$m on Electricity ($pl)"
-        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/electricity/ --data_path electricity.csv --model_id Electricity_${pl}_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 321 --dec_in 321 --c_out 321 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 16 --des Dataset_Exp --itr $ITR $EXTRA"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/electricity/ --data_path electricity.csv --model_id Electricity_${pl}_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 321 --dec_in 321 --c_out 321 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 16 --des Dataset_Exp --itr $ITR $LARGE_DS_FLAGS $EXTRA"
         invoke_exp "$cmd" "$label"
     done
 done
@@ -147,7 +149,7 @@ for m in "${BASE_MODELS[@]}"; do
     fi
     for pl in "${HORIZONS[@]}"; do
         label="$m on Traffic ($pl)"
-        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/traffic/ --data_path traffic.csv --model_id Traffic_${pl}_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 862 --dec_in 862 --c_out 862 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 8 --des Dataset_Exp --itr $ITR $EXTRA"
+        cmd="python3 -u run.py --task_name long_term_forecast --is_training 1 --root_path ./dataset/traffic/ --data_path traffic.csv --model_id Traffic_${pl}_${pl} --model $m --data custom --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $pl --e_layers $E_LAYERS --d_layers $D_LAYERS --enc_in 862 --dec_in 862 --c_out 862 --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND --dropout $DROPOUT --batch_size 8 --des Dataset_Exp --itr $ITR $LARGE_DS_FLAGS $EXTRA"
         invoke_exp "$cmd" "$label"
     done
 done
