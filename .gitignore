@@ -139,3 +139,7 @@ submission/
 MDPI_template_ACS/figures/*.png
 # LaTeX auto-generated artifacts
 *eps-converted-to.pdf
+
+template/
+
+els-cas-templates/
