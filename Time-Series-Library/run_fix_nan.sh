@@ -29,7 +29,7 @@ for P in 96 192 336 720; do
         --e_layers $E_LAYERS --d_layers $D_LAYERS \
         --enc_in 21 --dec_in 21 --c_out 21 \
         --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND \
-        --batch_size 16 --dropout $DROPOUT --train_epochs $EPOCHS \
+        --batch_size 64 --dropout $DROPOUT --train_epochs $EPOCHS \
         --use_amp --des fix_nan --itr $ITR
 done
 
