@@ -710,3 +710,6 @@ mse:0.257490336894989, mae:0.36003822088241577, dtw:Not calculated
 long_term_forecast_Electricity_336_336_Transformer_custom_ftM_sl96_ll48_pl336_dm512_nh8_el3_dl1_df64_expand2_dc4_fc1_ebtimeF_dtTrue_Dataset_Exp_ab0  
 mse:0.2578377425670624, mae:0.35700756311416626, dtw:Not calculated
 
+long_term_forecast_Traffic_96_96_FTMamba_custom_ftM_sl96_ll48_pl96_dm512_nh8_el3_dl1_df64_expand2_dc4_fc1_ebtimeF_dtTrue_Dataset_Exp_ab0  
+mse:0.45601916313171387, mae:0.3057643175125122, dtw:Not calculated
+
