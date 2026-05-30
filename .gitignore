@@ -141,5 +141,8 @@ MDPI_template_ACS/figures/*.png
 *eps-converted-to.pdf
 
 template/
-
 els-cas-templates/
+electronics_submission/
+MDPI_template_ACS/
+peer_reviews/
+revision/
