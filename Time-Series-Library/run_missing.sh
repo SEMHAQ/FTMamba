@@ -1,8 +1,7 @@
 #!/bin/bash
 # ============================================
 # Run missing experiments for Electronics paper
-# - Electricity T=720
-# - Traffic T=192, 336, 720
+# - Electricity T=720 (FTMamba + 3 baselines)
 # ============================================
 
 export CUDA_VISIBLE_DEVICES=0
@@ -19,7 +18,7 @@ EPOCHS=10
 ITR=1
 
 echo "=========================================="
-echo " Part 1: Electricity T=720 (all models)"
+echo " Electricity T=720 (all models)"
 echo "=========================================="
 
 # FTMamba
@@ -70,64 +69,5 @@ python3 -u run.py --task_name long_term_forecast --is_training 1 \
 
 echo ""
 echo "=========================================="
-echo " Part 2: Traffic T=192, 336, 720"
-echo "=========================================="
-
-# FTMamba
-for P in 192 336 720; do
-    echo "[Traffic] FTMamba T=$P"
-    python3 -u run.py --task_name long_term_forecast --is_training 1 \
-        --root_path ./dataset/traffic/ --data_path traffic.csv \
-        --model_id traffic_96_${P} --model FTMamba --data custom \
-        --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $P \
-        --e_layers $E_LAYERS --d_layers $D_LAYERS \
-        --enc_in 862 --dec_in 862 --c_out 862 \
-        --d_model $D_MODEL --d_ff $D_FF --d_conv $D_CONV --expand $EXPAND \
-        --batch_size 16 --dropout $DROPOUT --train_epochs $EPOCHS \
-        --use_amp --des Exp --itr $ITR
-done
-
-# PatchTST
-for P in 192 336 720; do
-    echo "[Traffic] PatchTST T=$P"
-    python3 -u run.py --task_name long_term_forecast --is_training 1 \
-        --root_path ./dataset/traffic/ --data_path traffic.csv \
-        --model_id traffic_96_${P} --model PatchTST --data custom \
-        --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $P \
-        --e_layers $E_LAYERS --d_layers $D_LAYERS \
-        --enc_in 862 --dec_in 862 --c_out 862 \
-        --d_model $D_MODEL --d_ff $D_FF \
-        --batch_size 16 --dropout $DROPOUT --train_epochs $EPOCHS \
-        --use_amp --des Exp --itr $ITR
-done
-
-# iTransformer
-for P in 192 336 720; do
-    echo "[Traffic] iTransformer T=$P"
-    python3 -u run.py --task_name long_term_forecast --is_training 1 \
-        --root_path ./dataset/traffic/ --data_path traffic.csv \
-        --model_id traffic_96_${P} --model iTransformer --data custom \
-        --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $P \
-        --e_layers $E_LAYERS --d_layers $D_LAYERS \
-        --enc_in 862 --dec_in 862 --c_out 862 \
-        --d_model $D_MODEL --d_ff $D_FF \
-        --batch_size 16 --dropout $DROPOUT --train_epochs $EPOCHS \
-        --use_amp --des Exp --itr $ITR
-done
-
-# DLinear
-for P in 192 336 720; do
-    echo "[Traffic] DLinear T=$P"
-    python3 -u run.py --task_name long_term_forecast --is_training 1 \
-        --root_path ./dataset/traffic/ --data_path traffic.csv \
-        --model_id traffic_96_${P} --model DLinear --data custom \
-        --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $P \
-        --enc_in 862 --dec_in 862 --c_out 862 \
-        --batch_size 16 --train_epochs $EPOCHS \
-        --des Exp --itr $ITR
-done
-
-echo ""
-echo "=========================================="
-echo " Done! Total: 4 + 12 = 16 runs"
+echo " Done! Total: 4 runs"
 echo "=========================================="

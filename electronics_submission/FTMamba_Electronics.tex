@@ -33,7 +33,7 @@ $^{2}$ \quad School of Computer Science, Hunan University of Technology and Busi
 \corres{Correspondence: semhaqx@gmail.com}
 
 % Abstract
-\abstract{Long-term time series forecasting (LTSF) requires capturing both sequential dependencies and periodic structure. Existing Mamba-based forecasters achieve linear complexity but process time series only in the temporal domain, leaving frequency-domain information unexploited. We propose a dual-branch architecture that learns temporal and frequency representations symmetrically and merges them through an input-dependent gate. The temporal branch uses a Mamba block to capture long-range dependencies across patches; the frequency branch applies a learnable complex-valued filter bank in the FFT domain over the same patch embeddings. The gate weights the two streams per element, so the model can rely on temporal evidence for some inputs and spectral structure for others. On six benchmarks (ETTh1, ETTh2, ETTm1, Weather, Electricity, Traffic) at horizons 96--720, the model achieves the best MSE on 4 of 15 dataset--horizon pairs on the four main benchmarks and ranks among the top three on 12 of 15, against nine baselines spanning Transformer, linear, convolutional, frequency-domain, and Mamba-based architectures. Ablation shows that the gating mechanism matters more than the frequency branch itself: replacing the gate with simple addition raises MSE by 4.0\%, while removing the frequency branch entirely costs only 0.9\%. The architecture retains linear complexity in sequence length.}
+\abstract{Long-term time series forecasting (LTSF) requires capturing both sequential dependencies and periodic structure. Existing Mamba-based forecasters achieve linear complexity but process time series only in the temporal domain, leaving frequency-domain information unexploited. We propose a dual-branch architecture that learns temporal and frequency representations symmetrically and merges them through an input-dependent gate. The temporal branch uses a Mamba block to capture long-range dependencies across patches; the frequency branch applies a learnable complex-valued filter bank in the FFT domain over the same patch embeddings. The gate weights the two streams per element, so the model can rely on temporal evidence for some inputs and spectral structure for others. On five benchmarks (ETTh1, ETTh2, ETTm1, Weather, Electricity) at horizons 96--720, the model achieves the best MSE on 4 of 15 dataset--horizon pairs on the four main benchmarks and ranks among the top three on 12 of 15, against nine baselines spanning Transformer, linear, convolutional, frequency-domain, and Mamba-based architectures. Ablation shows that the gating mechanism matters more than the frequency branch itself: replacing the gate with simple addition raises MSE by 4.0\%, while removing the frequency branch entirely costs only 0.9\%. The architecture retains linear complexity in sequence length.}
 
 % Keywords
 \keyword{long-term time series forecasting; dual-domain learning; state space model; frequency analysis; adaptive gating; Mamba}
@@ -44,7 +44,7 @@ $^{2}$ \quad School of Computer Science, Hunan University of Technology and Busi
  \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
  \item Symmetric dual-domain learning that pairs a Mamba temporal branch with a learnable FFT frequency branch achieves best MSE on 4 of 15 main-benchmark horizons and top-three ranking on 12 of 15
  \item An input-dependent gate that adaptively balances temporal and frequency streams contributes more to accuracy than the presence of frequency features alone
- \item Experiments on six benchmarks including large-scale datasets (Electricity with 321 variates, Traffic with 862 variates) confirm generalizability
+ \item Experiments on five benchmarks including the large-scale Electricity dataset (321 variates) confirm generalizability
  \end{itemize}\vspace{3pt}
 \textbf{What are the implications of the main findings?}
  \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
@@ -72,7 +72,7 @@ Our contributions are as follows:
 
 \begin{enumerate}
 \item A dual-domain encoder that processes temporal and frequency representations symmetrically through parallel branches (Mamba for temporal, learnable FFT filters for frequency), fused through an input-dependent gate. The architecture maintains linear complexity $O(N \cdot D \cdot (E + \log N))$ in sequence length.
-\item Experiments on six public benchmarks (ETTh1, ETTh2, ETTm1, Weather, Electricity, Traffic) at horizons 96--720. The model achieves the best MSE on 4 of 15 main-benchmark horizons and top-three ranking on 12 of 15 against nine baselines spanning Transformer, linear, convolutional, frequency-domain, and Mamba-based architectures, with the largest gains at extended horizons (up to 4.3\% MSE reduction over PatchTST on ETTh1/720).
+\item Experiments on five public benchmarks (ETTh1, ETTh2, ETTm1, Weather, Electricity) at horizons 96--720. The model achieves the best MSE on 4 of 15 main-benchmark horizons and top-three ranking on 12 of 15 against nine baselines spanning Transformer, linear, convolutional, frequency-domain, and Mamba-based architectures, with the largest gains at extended horizons (up to 4.3\% MSE reduction over PatchTST on ETTh1/720).
 \item An ablation study where the gating mechanism contributes more to accuracy than the frequency branch itself: replacing the gate with simple addition increases MSE by 4.0\%, while removing the entire frequency branch costs only 0.9\%. Adaptive fusion of temporal and frequency information is more valuable than the fixed presence of either component.
 \end{enumerate}
 
@@ -258,7 +258,6 @@ We evaluate FTMamba on six widely-used benchmark datasets for long-term time ser
 \item \textbf{ETTm1}~\cite{ref17}: A 15-minute resolution version of ETTh1, containing the same 7 features but with 4$\times$ more data points.
 \item \textbf{Weather}~\cite{ref1}: A meteorological dataset containing 21 climate variables (temperature, humidity, wind speed, etc.) recorded at 10-minute intervals in 2020 from the Weather Station of the Max Planck Institute for Biogeochemistry in Jena, Germany, totaling 52,696 time steps.
 \item \textbf{Electricity}~\cite{ref18}: Electricity consumption of 321 clients recorded hourly from 2012 to 2014, totaling 26,304 time steps. This dataset captures diverse consumption patterns across households and businesses.
-\item \textbf{Traffic}~\cite{ref18}: Road occupancy rates measured by 862 sensors on San Francisco Bay Area freeways, recorded hourly from 2015 to 2016, totaling 17,544 time steps.
 \end{itemize}
 
 Table~\ref{tab:datasets} summarizes the dataset statistics. Following standard protocols~\cite{ref6,ref7,ref8}, we use the last 20\% of data for testing, the preceding 20\% for validation, and the remaining 60\% for training.
@@ -274,7 +273,6 @@ ETTh2        & 7    & 17,420  & 1 hour   & 96, 192, 336, 720 \\
 ETTm1        & 7    & 69,680  & 15 min   & 96, 192, 336, 720 \\
 Weather      & 21   & 52,696  & 10 min   & 96, 192, 336, 720 \\
 Electricity  & 321  & 26,304  & 1 hour   & 96, 192, 336, 720 \\
-Traffic      & 862  & 17,544  & 1 hour   & 96, 192, 336, 720 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -296,7 +294,7 @@ All baselines are evaluated using their official implementations with default hy
 
 FTMamba is implemented in PyTorch based on the Time-Series-Library framework~\cite{ref18}. We use the following hyperparameters: lookback window $L = 96$, label length = 48, patch length $P = 16$, stride $S = 8$, model dimension $D = 512$, feedforward dimension $d_{ff} = 64$, number of encoder layers $N_{layers} = 3$, convolution kernel size $d_{conv} = 4$, expansion factor = 2, and dropout rate = 0.1. We follow the standard protocol of using $L = 96$ as the lookback window, consistent with prior work~\cite{ref8,ref9}.
 
-All models are trained with the Adam optimizer~\cite{ref19} for 10 epochs with a learning rate of 1e-4 and cosine annealing scheduler. Mean Squared Error (MSE) is used as the training loss. We use a batch size of 32 for ETTh1, ETTh2, and ETTm1, and a batch size of 64 for Weather. For the large-scale datasets Electricity (321 variates) and Traffic (862 variates), we use a batch size of 16 to manage GPU memory. All experiments run on a server equipped with an NVIDIA GeForce RTX 3090 GPU (24\,GB VRAM) with Automatic Mixed Precision (AMP).
+All models are trained with the Adam optimizer~\cite{ref19} for 10 epochs with a learning rate of 1e-4 and cosine annealing scheduler. Mean Squared Error (MSE) is used as the training loss. We use a batch size of 32 for ETTh1, ETTh2, and ETTm1, and a batch size of 64 for Weather. For the large-scale Electricity dataset (321 variates), we use a batch size of 16 to manage GPU memory. All experiments run on a server equipped with an NVIDIA GeForce RTX 3090 GPU (24\,GB VRAM) with Automatic Mixed Precision (AMP).
 
 \subsubsection{Evaluation Metrics}
 
@@ -387,23 +385,17 @@ FTMamba       & 0.1746 / 0.2157  & 0.2259 / 0.2605  & 0.2841 / 0.3030  & 0.3559 
 \end{table}
 
 \begin{table}[H]
-\caption{Results on Electricity and Traffic datasets (MSE / MAE). Lower is better.\label{tab:large_scale}}
+\caption{Results on Electricity dataset (MSE / MAE). Lower is better.\label{tab:large_scale}}
 \begin{tabularx}{\textwidth}{CCCCCC}
 \toprule
 \textbf{Model} & \textbf{96} & \textbf{192} & \textbf{336} & \textbf{720} \\
-\midrule
-\multicolumn{5}{c}{\textit{Electricity (321 variates)}} \\
 \midrule
 PatchTST      & 0.1831 / 0.2781  & 0.1879 / 0.2799  & 0.2052 / 0.2976  & ---  \\
 iTransformer  & \textbf{0.1625} / \textbf{0.2544}  & \textbf{0.1746} / \textbf{0.2643}  & \textbf{0.1924} / \textbf{0.2827}  & ---  \\
 DLinear       & 0.1998 / 0.2866  & 0.2001 / 0.2910  & 0.2132 / 0.3063  & ---  \\
 Transformer   & 0.2514 / 0.3534  & 0.2575 / 0.3600  & 0.2578 / 0.3570  & ---  \\
 Mamba         & 0.1713 / 0.2752  & --- & --- & ---  \\
-\textbf{FTMamba}  & 0.1807 / 0.2785  & 0.1820 / 0.2779  & 0.2041 / 0.2977  & ---  \\
-\midrule
-\multicolumn{5}{c}{\textit{Traffic (862 variates)}} \\
-\midrule
-\textbf{FTMamba}  & 0.4560 / 0.3058  & --- & --- & ---  \\
+FTMamba       & 0.1807 / 0.2785  & 0.1820 / 0.2779  & 0.2041 / 0.2977  & ---  \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -425,7 +417,7 @@ Among the new baselines, FEDformer emerges as the strongest competitor on ETTh1,
 
 \textbf{Comparison with Mamba-based Methods.} Against S-Mamba and TimeMachine, FTMamba shows consistent advantages. S-Mamba, which applies Mamba across the variate dimension, underperforms on all four main datasets, suggesting that variate-wise processing without frequency modeling is insufficient. TimeMachine with multi-scale temporal processing is more competitive, particularly on ETTh2 and ETTm1, but FTMamba still outperforms it on 10 of 15 configurations. The key difference is FTMamba's frequency branch and adaptive gating, which provide complementary spectral information that purely temporal Mamba variants lack.
 
-\textbf{Large-Scale Datasets.} On Electricity (321 variates), iTransformer achieves the best results across all horizons, leveraging its attention across variates to capture inter-client dependencies. FTMamba ranks second at T=192 (0.1820 vs.\ 0.1746) and is competitive at other horizons. The channel-independent design of FTMamba processes each variate independently, which limits its ability to capture cross-variate patterns that iTransformer's inverted attention exploits. On Traffic (862 variates), FTMamba achieves MSE of 0.4560 at T=96; full comparison across horizons is ongoing.
+\textbf{Large-Scale Datasets.} On Electricity (321 variates), iTransformer achieves the best results across all horizons, leveraging its attention across variates to capture inter-client dependencies. FTMamba ranks second at T=192 (0.1820 vs.\ 0.1746) and is competitive at other horizons. The channel-independent design of FTMamba processes each variate independently, which limits its ability to capture cross-variate patterns that iTransformer's inverted attention exploits.
 
 \textbf{Effect of Prediction Horizon.} FTMamba's gains grow at longer horizons. At T=720 on ETTh1, it beats all baselines by 4.3--17.2\% MSE. This aligns with the hypothesis that frequency features help maintain periodic structure over extended windows. At shorter horizons (T=96), the advantage is smaller because temporal patterns alone are often sufficient for near-term prediction.
 
@@ -558,7 +550,7 @@ Gating is common in sequence models. In LSTMs, gates control information flow be
 
 \subsection{Computational Efficiency}
 
-Linear complexity gives FTMamba a practical edge over Transformer-based methods. FTMamba's Mamba-based temporal branch processes sequences with $O(N \cdot D \cdot E)$ complexity, compared to the $O(N^2 \cdot D)$ cost of self-attention in PatchTST and iTransformer. The frequency branch adds $O(N \cdot D \cdot \log N)$, which is dominated by the Mamba cost for typical configurations. The frequency filter has $N/2+1$ complex-valued parameters and the gate uses a single linear layer, keeping the total parameter count comparable to PatchTST. The channel-independent design means memory scales linearly with the number of variates $C$, which is relevant for high-dimensional datasets like Electricity ($C=321$) and Traffic ($C=862$).
+Linear complexity gives FTMamba a practical edge over Transformer-based methods. FTMamba's Mamba-based temporal branch processes sequences with $O(N \cdot D \cdot E)$ complexity, compared to the $O(N^2 \cdot D)$ cost of self-attention in PatchTST and iTransformer. The frequency branch adds $O(N \cdot D \cdot \log N)$, which is dominated by the Mamba cost for typical configurations. The frequency filter has $N/2+1$ complex-valued parameters and the gate uses a single linear layer, keeping the total parameter count comparable to PatchTST. The channel-independent design means memory scales linearly with the number of variates $C$, which is relevant for high-dimensional datasets like Electricity ($C=321$).
 
 \subsection{Comparison with Alternative Frequency-Domain Approaches}
 
@@ -573,7 +565,7 @@ The ablation study is conducted on a single dataset (ETTh1) at a single horizon 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
 
-We presented FTMamba, a dual-branch architecture for long-term time series forecasting. A Mamba block handles temporal modeling at linear complexity; an FFT branch applies learnable complex-valued filters over patch representations; a learned gate merges the two streams. On six benchmarks (ETTh1, ETTh2, ETTm1, Weather, Electricity, Traffic), FTMamba achieves the best MSE on 4 of 15 main-benchmark horizons and ranks among the top three on 12 of 15 against nine baselines spanning Transformer, linear, convolutional, frequency-domain, and Mamba-based architectures. Results are strongest on ETTh1 and ETTh2, where it wins 4 of 8 horizons with the largest margin at ETTh1/720 (4.3\% over PatchTST). On ETTm1 and Weather, it remains consistently competitive, trailing the best by less than 3.5\%. On the large-scale Electricity dataset (321 variates), iTransformer with cross-variate attention leads, while FTMamba ranks second at T=192.
+We presented FTMamba, a dual-branch architecture for long-term time series forecasting. A Mamba block handles temporal modeling at linear complexity; an FFT branch applies learnable complex-valued filters over patch representations; a learned gate merges the two streams. On five benchmarks (ETTh1, ETTh2, ETTm1, Weather, Electricity), FTMamba achieves the best MSE on 4 of 15 main-benchmark horizons and ranks among the top three on 12 of 15 against nine baselines spanning Transformer, linear, convolutional, frequency-domain, and Mamba-based architectures. Results are strongest on ETTh1 and ETTh2, where it wins 4 of 8 horizons with the largest margin at ETTh1/720 (4.3\% over PatchTST). On ETTm1 and Weather, it remains consistently competitive, trailing the best by less than 3.5\%. On the large-scale Electricity dataset (321 variates), iTransformer with cross-variate attention leads, while FTMamba ranks second at T=192.
 
 The ablation study shows that the gating mechanism matters more than the frequency branch alone: replacing gated fusion with simple addition raises MSE by 4.0\%, while removing the frequency branch entirely costs 0.9\%. This suggests that being able to choose between temporal and frequency information is more valuable than the fixed presence of either stream.
 
@@ -612,7 +604,6 @@ MSE & Mean Squared Error \\
 MAE & Mean Absolute Error \\
 ETT & Electricity Transformer Temperature \\
 ECL & Electricity \\
-PEMS & Performance Measurement System (Traffic) \\
 AMP & Automatic Mixed Precision
 \end{tabular}
 }
