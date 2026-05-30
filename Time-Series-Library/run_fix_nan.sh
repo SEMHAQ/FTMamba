@@ -22,7 +22,7 @@ echo "=========================================="
 
 for P in 96 192 336 720; do
     echo "[Weather] pred_len=$P"
-    python -u run.py --task_name long_term_forecast --is_training 1 \
+    python3 -u run.py --task_name long_term_forecast --is_training 1 \
         --root_path ./dataset/weather/ --data_path weather.csv \
         --model_id weather_96_${P}_fix --model FTMamba --data custom \
         --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $P \
@@ -39,7 +39,7 @@ echo " Part 2: ETTh2 seed2021 T=720"
 echo "=========================================="
 
 echo "[ETTh2] pred_len=720, seed=2021"
-python -u run.py --task_name long_term_forecast --is_training 1 \
+python3 -u run.py --task_name long_term_forecast --is_training 1 \
     --root_path ./dataset/ETT-small/ --data_path ETTh2.csv \
     --model_id ETTh2_96_720_seed2021_fix --model FTMamba --data ETTh2 \
     --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len 720 \
@@ -57,7 +57,7 @@ echo "=========================================="
 # seed2021: T=96, 336, 720 missing
 for P in 96 336 720; do
     echo "[ETTm1] pred_len=$P, seed=2021"
-    python -u run.py --task_name long_term_forecast --is_training 1 \
+    python3 -u run.py --task_name long_term_forecast --is_training 1 \
         --root_path ./dataset/ETT-small/ --data_path ETTm1.csv \
         --model_id ETTm1_96_${P}_seed2021_fix --model FTMamba --data ETTm1 \
         --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $P \
@@ -76,7 +76,7 @@ echo "=========================================="
 # seed42: T=336, 720 missing
 for P in 336 720; do
     echo "[ETTm1] pred_len=$P, seed=42"
-    python -u run.py --task_name long_term_forecast --is_training 1 \
+    python3 -u run.py --task_name long_term_forecast --is_training 1 \
         --root_path ./dataset/ETT-small/ --data_path ETTm1.csv \
         --model_id ETTm1_96_${P}_seed42_fix --model FTMamba --data ETTm1 \
         --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $P \
@@ -95,7 +95,7 @@ echo "=========================================="
 # seed1234: all 4 missing
 for P in 96 192 336 720; do
     echo "[ETTm1] pred_len=$P, seed=1234"
-    python -u run.py --task_name long_term_forecast --is_training 1 \
+    python3 -u run.py --task_name long_term_forecast --is_training 1 \
         --root_path ./dataset/ETT-small/ --data_path ETTm1.csv \
         --model_id ETTm1_96_${P}_seed1234_fix --model FTMamba --data ETTm1 \
         --features M --seq_len $SEQ_LEN --label_len $LABEL_LEN --pred_len $P \
